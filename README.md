@@ -9,14 +9,14 @@ React frontend application repository for the platform blueprint.
 - `docs/`: frontend-specific documentation
 
 ## Toolchain
+- GNU Make (or a compatible make implementation)
 - Node.js `24.13.1`
 - npm `11.8.0`
 - Version pin source: `.tool-versions` and `package.json`
 
 ## Setup
 Run one of the following bootstrap commands from the repository root:
-- PowerShell: `./scripts/bootstrap.ps1`
-- POSIX shell: `./scripts/bootstrap.sh`
+- Make: `make bootstrap`
 
 Bootstrap installs pinned npm dependencies via `npm ci` and validates the local toolchain.
 If `mise` or `asdf` is available, the script will use it to install the pinned toolchain automatically.
@@ -28,3 +28,5 @@ Application bootstrap and local runtime commands will be added in later Phase 1 
 ## Test
 No automated test suite is configured yet.
 Linting, formatting, and test commands will be introduced in `P1-T04` and later tasks.
+
+

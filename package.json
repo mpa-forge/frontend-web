@@ -4,6 +4,6 @@
   "private": true,
   "packageManager": "npm@11.8.0",
   "scripts": {
-    "bootstrap": "npm ci"
+    "bootstrap": "make bootstrap"
   }
 }
