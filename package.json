@@ -1,0 +1,9 @@
+{
+  "name": "@mpa-forge/frontend-web",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "npm@11.8.0",
+  "scripts": {
+    "bootstrap": "npm ci"
+  }
+}
