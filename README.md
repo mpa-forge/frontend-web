@@ -8,9 +8,18 @@ React frontend application repository for the platform blueprint.
 - `scripts/`: local utility and developer scripts
 - `docs/`: frontend-specific documentation
 
+## Toolchain
+- Node.js `24.13.1`
+- npm `11.8.0`
+- Version pin source: `.tool-versions` and `package.json`
+
 ## Setup
-This repository is currently at the skeleton stage.
-Toolchain pinning, package manager wiring, and bootstrap commands will be added in `P1-T03`.
+Run one of the following bootstrap commands from the repository root:
+- PowerShell: `./scripts/bootstrap.ps1`
+- POSIX shell: `./scripts/bootstrap.sh`
+
+Bootstrap installs pinned npm dependencies via `npm ci` and validates the local toolchain.
+If `mise` or `asdf` is available, the script will use it to install the pinned toolchain automatically.
 
 ## Run
 No runnable frontend entrypoint exists yet.
