@@ -2,17 +2,30 @@ FROM node:24-alpine AS build
 
 WORKDIR /app
 
-COPY public ./public
+ARG VITE_APP_ENV=local
+ARG VITE_API_BASE_URL=http://localhost:8080
+ARG VITE_CLERK_PUBLISHABLE_KEY=pk_test_replace_me
+ARG VITE_CLERK_SIGN_IN_URL=/sign-in
+ARG VITE_CLERK_SIGN_UP_URL=/sign-up
 
-RUN mkdir -p /out \
-	&& cp -R public/. /out/ \
-	&& if [ ! -f /out/index.html ]; then \
-		printf '%s\n' '<!doctype html><html><body><h1>frontend-web placeholder</h1></body></html>' > /out/index.html; \
-	fi
+ENV VITE_APP_ENV=$VITE_APP_ENV
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_SIGN_IN_URL=$VITE_CLERK_SIGN_IN_URL
+ENV VITE_CLERK_SIGN_UP_URL=$VITE_CLERK_SIGN_UP_URL
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY public ./public
+COPY src ./src
+COPY index.html vite.config.ts tsconfig.json eslint.config.mjs prettier.config.mjs ./
+
+RUN npm run build
 
 FROM nginx:1.29-alpine AS runtime
 
-COPY --from=build /out /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 

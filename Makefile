@@ -2,8 +2,9 @@ SHELL := bash
 
 NODE_VERSION := 24.13.1
 NPM_VERSION := 11.8.0
+PLATFORM_INFRA_DIR := ../platform-infra
 
-.PHONY: help bootstrap install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check
+.PHONY: help bootstrap install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check run support-up support-down support-logs support-ps
 
 help:
 	@echo "Targets:"
@@ -17,6 +18,11 @@ help:
 	@echo "  lint              Run repo lint checks"
 	@echo "  format            Apply repo formatting"
 	@echo "  format-check      Check repo formatting without writing changes"
+	@echo "  run               Build and serve the frontend locally on port 3000"
+	@echo "  support-up        Start postgres + backend-api from platform-infra"
+	@echo "  support-down      Stop the shared local compose stack"
+	@echo "  support-logs      Stream postgres + backend-api logs"
+	@echo "  support-ps        Show shared local compose stack status"
 
 bootstrap: install-tools check-tools install-dev-tools
 	npm ci
@@ -80,3 +86,18 @@ repo-format:
 
 repo-format-check:
 	npm run format:check
+
+run:
+	npm run run
+
+support-up:
+	$(MAKE) -C $(PLATFORM_INFRA_DIR) local-frontend-support-up
+
+support-down:
+	$(MAKE) -C $(PLATFORM_INFRA_DIR) local-down
+
+support-logs:
+	$(MAKE) -C $(PLATFORM_INFRA_DIR) local-frontend-support-logs
+
+support-ps:
+	$(MAKE) -C $(PLATFORM_INFRA_DIR) local-ps
