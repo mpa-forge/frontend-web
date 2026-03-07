@@ -63,6 +63,7 @@ For native frontend work:
 The local frontend build serves on `http://localhost:3000`.
 Support services come from the centralized compose stack in `../platform-infra`.
 After code changes, rerun `make run` to rebuild and restart the native frontend.
+The frontend exposes a static health endpoint at `http://localhost:3000/healthz`.
 
 ## Container
 
@@ -76,6 +77,7 @@ After code changes, rerun `make run` to rebuild and restart the native frontend.
   - run `make run`
   - compose provides `backend-api` on `http://localhost:8080` and Postgres on `localhost:5432`
 - API-focused mode is orchestrated from `backend-api`, where compose provides the containerized frontend on `http://localhost:3000`
+- Health endpoint: `http://localhost:3000/healthz`
 
 ## Test
 
