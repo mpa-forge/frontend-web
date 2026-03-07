@@ -54,13 +54,28 @@ Runtime consumption will be wired when the frontend runtime is introduced in lat
 
 ## Run
 
-No runnable frontend entrypoint exists yet.
-Application bootstrap and local runtime commands will be added in later Phase 1 tasks.
+For native frontend work:
+
+- Start support services from this repo: `make support-up`
+- Run the frontend locally: `make run`
+- Stop support services: `make support-down`
+
+The local frontend build serves on `http://localhost:3000`.
+Support services come from the centralized compose stack in `../platform-infra`.
+After code changes, rerun `make run` to rebuild and restart the native frontend.
 
 ## Container
 
 - Build placeholder image: `docker build -t frontend-web:local .`
-- Runtime image serves the `public/` placeholder assets and is intended for the local stack baseline in `P1-T06` and `P1-T07`
+- Runtime image serves the built frontend bundle and is intended for the local stack baseline in `P1-T06` and `P1-T07`
+
+## Local Stack
+
+- Frontend-focused mode:
+  - run `make support-up`
+  - run `make run`
+  - compose provides `backend-api` on `http://localhost:8080` and Postgres on `localhost:5432`
+- API-focused mode is orchestrated from `backend-api`, where compose provides the containerized frontend on `http://localhost:3000`
 
 ## Test
 

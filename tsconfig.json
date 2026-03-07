@@ -3,10 +3,12 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "strict": true,
     "noEmit": true,
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    "types": ["vite/client"]
   },
-  "include": ["src/**/*", "packages/**/*", "proto/**/*", "*.js", "*.mjs"]
+  "include": ["src/**/*", "*.ts", "*.js", "*.mjs"]
 }
