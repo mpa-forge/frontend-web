@@ -39,6 +39,19 @@ If `mise` or `asdf` is available, the script will use it to install the pinned t
 - Apply formatting: `make format`
 - Check formatting only: `make format-check`
 
+## Environment
+
+- Copy `.env.example` to `.env` for local development
+- Required local variables:
+  - `VITE_APP_ENV`
+  - `VITE_API_BASE_URL`
+  - `VITE_CLERK_PUBLISHABLE_KEY`
+- Optional local variables:
+  - `VITE_CLERK_SIGN_IN_URL`
+  - `VITE_CLERK_SIGN_UP_URL`
+
+Runtime consumption will be wired when the frontend runtime is introduced in later tasks.
+
 ## Run
 
 No runnable frontend entrypoint exists yet.
