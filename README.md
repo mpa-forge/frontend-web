@@ -57,6 +57,11 @@ Runtime consumption will be wired when the frontend runtime is introduced in lat
 No runnable frontend entrypoint exists yet.
 Application bootstrap and local runtime commands will be added in later Phase 1 tasks.
 
+## Container
+
+- Build placeholder image: `docker build -t frontend-web:local .`
+- Runtime image serves the `public/` placeholder assets and is intended for the local stack baseline in `P1-T06` and `P1-T07`
+
 ## Test
 
 No automated test suite is configured yet.
