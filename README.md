@@ -7,7 +7,8 @@ React frontend application repository for the platform blueprint.
 - `src/`: application source code
 - `public/`: static public assets
 - `scripts/`: local utility and developer scripts
-- `docs/`: frontend-specific documentation
+- `docs/`: compatibility-oriented frontend documentation entrypoints
+- `openspec/`: canonical frontend behavior specs and archived change history
 
 ## Toolchain
 
