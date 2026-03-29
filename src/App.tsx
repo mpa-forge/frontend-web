@@ -1,20 +1,9 @@
-const requiredEnvVars = [
-  "VITE_APP_ENV",
-  "VITE_API_BASE_URL",
-  "VITE_CLERK_PUBLISHABLE_KEY"
-] as const;
-
-const envValues = {
-  VITE_APP_ENV: import.meta.env.VITE_APP_ENV,
-  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-  VITE_CLERK_PUBLISHABLE_KEY: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-  VITE_CLERK_SIGN_IN_URL: import.meta.env.VITE_CLERK_SIGN_IN_URL,
-  VITE_CLERK_SIGN_UP_URL: import.meta.env.VITE_CLERK_SIGN_UP_URL
-};
-
-const missingVars = requiredEnvVars.filter((key) => !envValues[key]);
+import { useRuntimeStore } from "./stores/runtimeStore";
 
 export function App() {
+  const envValues = useRuntimeStore((state) => state.envValues);
+  const missingVars = useRuntimeStore((state) => state.missingVars);
+
   return (
     <main>
       <h1>MPA Forge Blueprint</h1>

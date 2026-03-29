@@ -3,19 +3,19 @@ schema: spec-driven
 context: |
   Repository: frontend-web
   Role: React SPA repository for the authenticated product frontend baseline.
-  Stack: React 19, Vite 7, TypeScript, static health asset, Docker multi-stage build with nginx runtime.
+  Stack: React 19, Bun 1.3, Vite 7, TypeScript, Vitest, Playwright, Zustand, static health asset, Docker multi-stage build with nginx runtime.
   Shared defaults: GCP is the cloud baseline, frontend delivery is CDN-first, and local support services are orchestrated through platform-infra.
   Frontend baseline: local development runs natively on port 3000 while backend-api and Postgres come from the centralized support stack.
   Auth baseline: browser-exposed configuration uses VITE_* variables and the baseline token model is direct SPA bearer tokens for protected API calls.
   Documentation rule: OpenSpec specs are the canonical source for behavior requirements; docs/ files are compatibility-oriented summaries and pointers.
-  Spec modeling rule: Prefer capability-sized specs such as frontend runtime, local stack, and container runtime instead of umbrella specs.
+  Spec modeling rule: Prefer capability-sized specs such as frontend runtime, local stack, toolchain, testing, state, and container runtime instead of umbrella specs.
 
 rules:
   proposal:
     - Keep proposals concise and focused on why and impact, not implementation detail.
-    - List capability names in kebab-case and keep documentation migrations behavior-preserving.
+    - List capability names in kebab-case and make stack and toolchain migrations explicit when they change repo entrypoints.
   design:
-    - Preserve existing frontend-web conventions around Vite, npm, make entrypoints, and platform-infra orchestration unless the change explicitly intends to alter them.
+    - Preserve existing frontend-web conventions around Vite, Bun, make entrypoints, and platform-infra orchestration unless the change explicitly intends to alter them.
     - Call out compatibility impacts when README, AGENTS, docs/, or sibling repo references are affected.
   specs:
     - Write normative requirements using SHALL or MUST on the first requirement line so they validate cleanly with OpenSpec.

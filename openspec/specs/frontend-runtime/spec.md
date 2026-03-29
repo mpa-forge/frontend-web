@@ -42,10 +42,10 @@ configuration" section listing the missing keys.
 
 ### Requirement: Local run uses the fixed preview port and health asset
 
-The repository SHALL provide `make run` through the npm `run` script, and that
-flow MUST build the app and serve the preview on `127.0.0.1:3000` with strict
-port enforcement. The built frontend MUST also expose the static `public/healthz`
-asset at `/healthz`.
+The repository SHALL provide `make run` through a Bun-backed run script, and
+that flow MUST build the app and serve the preview on `127.0.0.1:3000` with
+strict port enforcement. The built frontend MUST also expose the static
+`public/healthz` asset at `/healthz`.
 
 #### Scenario: Local preview serves the frontend on the documented port
 

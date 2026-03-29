@@ -1,10 +1,4 @@
-# frontend-container-runtime Specification
-
-## Purpose
-
-TBD - created by archiving change migrate-docs-to-openspec-specs. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Docker build accepts the baseline frontend configuration
 

@@ -15,12 +15,15 @@ Canonical behavior specs:
 - `openspec/specs/frontend-runtime/spec.md`
 - `openspec/specs/frontend-local-stack/spec.md`
 - `openspec/specs/frontend-container-runtime/spec.md`
+- `openspec/specs/frontend-toolchain/spec.md`
+- `openspec/specs/frontend-testing/spec.md`
+- `openspec/specs/frontend-state-management/spec.md`
 
 ## Toolchain
 
 - GNU Make (or a compatible `make` implementation) and a bash-compatible shell
+- Bun `1.3.11`
 - Node.js `24.13.1`
-- npm `11.8.0`
 - Version pin source: `.tool-versions` and `package.json`
 
 ## Setup
@@ -37,14 +40,17 @@ Run the setup commands from the repository root:
 - Workstation checks: `make doctor`
 - Bootstrap: `make bootstrap`
 
-Bootstrap installs pinned npm dependencies via `npm ci` and validates the local toolchain.
-If `mise` or `asdf` is available, the script will use it to install the pinned toolchain automatically.
+Bootstrap installs pinned frontend dependencies via Bun and validates the local
+toolchain. If `mise` or `asdf` is available, the script will use it to install
+the pinned toolchain automatically.
 
 ## Lint and Format
 
 - Install git hooks: `make precommit-install`
 - Run all pre-commit checks manually: `make precommit-run`
 - Run repo lint checks: `make lint`
+- Run repo unit/component tests: `make test`
+- Run repo browser tests: `bun run test:e2e`
 - Apply formatting: `make format`
 - Check formatting only: `make format-check`
 
@@ -86,5 +92,7 @@ For native frontend work:
 
 ## Test
 
-No automated test suite is configured yet.
-Linting, formatting, and test commands will be introduced incrementally in later tasks.
+- Unit/component testing baseline:
+  - `openspec/specs/frontend-testing/spec.md`
+- Shared client-state baseline:
+  - `openspec/specs/frontend-state-management/spec.md`

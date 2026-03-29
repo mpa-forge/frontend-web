@@ -17,7 +17,8 @@ live in `openspec/specs/frontend-runtime/spec.md`.
   the publishable key is present
 - missing required runtime variables are surfaced in a dedicated "Missing
   configuration" section
-- `make run` builds the app and serves the preview on `127.0.0.1:3000`
+- `make run` uses the Bun-backed run script, builds the app, and serves the
+  preview on `127.0.0.1:3000`
 - the built frontend keeps the static `/healthz` endpoint from `public/healthz`
 
 ## Update Rule

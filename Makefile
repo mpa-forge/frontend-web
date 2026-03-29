@@ -1,10 +1,11 @@
 SHELL := bash
 
+BUN ?= bun
 NODE_VERSION := 24.13.1
-NPM_VERSION := 11.8.0
+BUN_VERSION := 1.3.11
 PLATFORM_INFRA_DIR := ../platform-infra
 
-.PHONY: help bootstrap doctor install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check run support-up support-down support-logs support-ps
+.PHONY: help bootstrap doctor install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint test format format-check repo-lint repo-test repo-format repo-format-check run support-up support-down support-logs support-ps
 
 help:
 	@echo "Targets:"
@@ -13,10 +14,11 @@ help:
 	@echo "  install-tools     Install pinned tools with mise/asdf if available"
 	@echo "  check-tools       Validate pinned tool versions"
 	@echo "  print-toolchain   Print pinned tool versions"
-	@echo "  install-dev-tools Install Python and npm development tooling"
+	@echo "  install-dev-tools Install Python and Bun development tooling"
 	@echo "  precommit-install Install git pre-commit hooks"
 	@echo "  precommit-run     Run the configured pre-commit checks on all files"
 	@echo "  lint              Run repo lint checks"
+	@echo "  test              Run repo unit/component tests"
 	@echo "  format            Apply repo formatting"
 	@echo "  format-check      Check repo formatting without writing changes"
 	@echo "  run               Build and serve the frontend locally on port 3000"
@@ -25,8 +27,9 @@ help:
 	@echo "  support-logs      Stream postgres + backend-api logs"
 	@echo "  support-ps        Show shared local compose stack status"
 
-bootstrap: install-tools check-tools install-dev-tools
-	npm ci
+bootstrap: install-tools check-tools
+	python -m pip install --user -r requirements-dev.txt
+	$(BUN) install --frozen-lockfile
 
 doctor:
 	@if [[ -f ../platform-blueprint-specs/scripts/windows-tooling-doctor.ps1 ]]; then \
@@ -58,23 +61,23 @@ check-tools:
 		echo "Node.js version mismatch. Expected $(NODE_VERSION), got: $$actual_node" >&2; \
 		exit 1; \
 	fi
-	@actual_npm="$$(npm --version 2>/dev/null || true)"; \
-	if [[ -z "$$actual_npm" ]]; then \
-		echo "npm is required but not installed. Expected $(NPM_VERSION)." >&2; \
+	@actual_bun="$$( $(BUN) --version 2>/dev/null || true)"; \
+	if [[ -z "$$actual_bun" ]]; then \
+		echo "Bun is required but not installed. Expected $(BUN_VERSION)." >&2; \
 		exit 1; \
 	fi; \
-	if [[ "$$actual_npm" != *"$(NPM_VERSION)"* ]]; then \
-		echo "npm version mismatch. Expected $(NPM_VERSION), got: $$actual_npm" >&2; \
+	if [[ "$$actual_bun" != *"$(BUN_VERSION)"* ]]; then \
+		echo "Bun version mismatch. Expected $(BUN_VERSION), got: $$actual_bun" >&2; \
 		exit 1; \
 	fi
 
 print-toolchain:
 	@echo "Node.js $(NODE_VERSION)"
-	@echo "npm $(NPM_VERSION)"
+	@echo "Bun $(BUN_VERSION)"
 
 install-dev-tools:
 	python -m pip install --user -r requirements-dev.txt
-	npm install
+	$(BUN) install
 
 precommit-install: install-dev-tools
 	python -m pre_commit install
@@ -84,21 +87,26 @@ precommit-run:
 
 lint: repo-lint
 
+test: repo-test
+
 format: repo-format
 
 format-check: repo-format-check
 
 repo-lint:
-	npm run lint
+	$(BUN) run lint
+
+repo-test:
+	$(BUN) run test
 
 repo-format:
-	npm run format
+	$(BUN) run format
 
 repo-format-check:
-	npm run format:check
+	$(BUN) run format:check
 
 run:
-	npm run run
+	$(BUN) run run
 
 support-up:
 	$(MAKE) -C $(PLATFORM_INFRA_DIR) local-frontend-support-up
