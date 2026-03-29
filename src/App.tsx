@@ -24,7 +24,10 @@ export function App() {
         <ul>
           <li>Environment: {envValues.VITE_APP_ENV}</li>
           <li>API base URL: {envValues.VITE_API_BASE_URL}</li>
-          <li>Auth publishable key present: {envValues.VITE_CLERK_PUBLISHABLE_KEY ? "yes" : "no"}</li>
+          <li>
+            Auth publishable key present:{" "}
+            {envValues.VITE_CLERK_PUBLISHABLE_KEY ? "yes" : "no"}
+          </li>
         </ul>
       </section>
       <section>
