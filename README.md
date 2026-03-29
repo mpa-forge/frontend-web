@@ -10,6 +10,12 @@ React frontend application repository for the platform blueprint.
 - `docs/`: compatibility-oriented frontend documentation entrypoints
 - `openspec/`: canonical frontend behavior specs and archived change history
 
+Canonical behavior specs:
+
+- `openspec/specs/frontend-runtime/spec.md`
+- `openspec/specs/frontend-local-stack/spec.md`
+- `openspec/specs/frontend-container-runtime/spec.md`
+
 ## Toolchain
 
 - GNU Make (or a compatible `make` implementation) and a bash-compatible shell
@@ -45,15 +51,10 @@ If `mise` or `asdf` is available, the script will use it to install the pinned t
 ## Environment
 
 - Copy `.env.example` to `.env` for local development
-- Required local variables:
-  - `VITE_APP_ENV`
-  - `VITE_API_BASE_URL`
-  - `VITE_CLERK_PUBLISHABLE_KEY`
-- Optional local variables:
-  - `VITE_CLERK_SIGN_IN_URL`
-  - `VITE_CLERK_SIGN_UP_URL`
-
-Runtime consumption will be wired when the frontend runtime is introduced in later tasks.
+- Canonical runtime/environment contract:
+  - `openspec/specs/frontend-runtime/spec.md`
+- Compatibility summary:
+  - `docs/frontend-runtime.md`
 
 ## Run
 
@@ -63,24 +64,25 @@ For native frontend work:
 - Run the frontend locally: `make run`
 - Stop support services: `make support-down`
 
-The local frontend build serves on `http://localhost:3000`.
-Support services come from the centralized compose stack in `../platform-infra`.
-After code changes, rerun `make run` to rebuild and restart the native frontend.
-The frontend exposes a static health endpoint at `http://localhost:3000/healthz`.
+- Canonical runtime details:
+  - `openspec/specs/frontend-runtime/spec.md`
+- Canonical local-stack details:
+  - `openspec/specs/frontend-local-stack/spec.md`
 
 ## Container
 
 - Build placeholder image: `docker build -t frontend-web:local .`
-- Runtime image serves the built frontend bundle and is intended for the local stack baseline in `P1-T06` and `P1-T07`
+- Canonical container behavior:
+  - `openspec/specs/frontend-container-runtime/spec.md`
+- Compatibility summary:
+  - `docs/frontend-container-runtime.md`
 
 ## Local Stack
 
-- Frontend-focused mode:
-  - run `make support-up`
-  - run `make run`
-  - compose provides `backend-api` on `http://localhost:8080` and Postgres on `localhost:5432`
-- API-focused mode is orchestrated from `backend-api`, where compose provides the containerized frontend on `http://localhost:3000`
-- Health endpoint: `http://localhost:3000/healthz`
+- Canonical local-stack behavior:
+  - `openspec/specs/frontend-local-stack/spec.md`
+- Compatibility summary:
+  - `docs/frontend-local-stack.md`
 
 ## Test
 

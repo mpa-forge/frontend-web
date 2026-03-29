@@ -44,14 +44,6 @@ Before making changes:
   beyond the frontend baseline.
 - `../platform-blueprint-specs/implementation/implementation-plan.md` when the
   task depends on roadmap sequencing, phase ownership, or baseline MVP scope.
-- `../platform-blueprint-specs/implementation/phases/phase-1-repository-and-local-development-baseline.md`
-  when the task needs local stack, bootstrap, or repository-baseline intent.
-- `../platform-blueprint-specs/implementation/phases/phase-2-contracts-service-skeletons-and-data-baseline.md`
-  when the task needs authenticated frontend/API baseline alignment, generated
-  client adoption intent, or Phase 2 acceptance criteria.
-- `../platform-blueprint-specs/implementation/phase-tasks/phase-2-contracts-service-skeletons-and-data-baseline-tasks.md`
-  when the task needs Phase 2 task alignment, dependencies, or evidence context
-  for frontend contract-client work.
 - `../platform-blueprint-specs/common/standards/environment-variable-strategy.md`
   when the task touches `.env.example`, browser-exposed `VITE_*` variables, or
   frontend env-contract design.
@@ -61,6 +53,13 @@ Before making changes:
 - `../platform-blueprint-specs/common/standards/access-model.md` when the task
   touches auth scope, role-driven UX, privileged frontend behavior, or secret
   and identity ownership boundaries.
+- `../backend-api/openspec/specs/api-runtime/spec.md` when the task needs the current
+  browser-facing API surface, local API expectations, or runtime behavior that
+  frontend integration depends on.
+- `../backend-api/openspec/specs/api-authentication/spec.md` or
+  `../backend-api/docs/auth-implementation.md` when the task needs the
+  canonical protected API auth behavior, Clerk claim mapping, or `401`/`403`
+  semantics.
 - `../platform-contracts/docs/typescript-client-usage.md` when the task touches
   generated TypeScript client consumption, package imports, or frontend
   contract-client wiring.
