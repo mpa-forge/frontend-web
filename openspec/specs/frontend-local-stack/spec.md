@@ -19,6 +19,12 @@ compose stack inside `frontend-web`.
 - **THEN** the command delegates to the corresponding `platform-infra` local
   stack target
 
+#### Scenario: Frontend support-up can request a rebuild
+
+- **WHEN** a developer runs `make support-up BUILD=1` from this repo
+- **THEN** the delegated `platform-infra` target forces a Docker image rebuild
+  before starting the support stack
+
 ### Requirement: Frontend-focused local mode keeps the frontend native
 
 Frontend-focused local development SHALL run the frontend natively on

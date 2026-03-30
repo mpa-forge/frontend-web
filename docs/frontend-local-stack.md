@@ -11,6 +11,8 @@ requirements now live in `openspec/specs/frontend-local-stack/spec.md`.
 
 - `make support-up`, `make support-down`, `make support-logs`, and
   `make support-ps` delegate to the sibling `platform-infra` repo
+- `make support-up BUILD=1` forces the delegated support-service image rebuild
+  before startup
 - frontend-focused local development keeps the frontend native on
   `http://localhost:3000`
 - the shared support stack provides `backend-api` on `http://localhost:8080`

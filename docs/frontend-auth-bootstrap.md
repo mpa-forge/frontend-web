@@ -59,11 +59,29 @@ These are repo-local SPA routes, not values copied from the Clerk dashboard.
 Current route ownership:
 
 - `/`: protected app-shell home for the first authenticated feature flow
-- `/sign-in`: public auth-entry route reserved for Clerk sign-in handoff
-- `/sign-up`: public auth-entry route reserved for Clerk sign-up handoff
+- `/sign-in`: public auth-entry route that renders the Clerk sign-in SPA flow
+- `/sign-up`: public auth-entry route that renders the Clerk sign-up SPA flow
 
 The shared authenticated shell also owns the baseline sign-out handoff and
 returns signed-out browser sessions to the documented sign-in route.
+
+## Auth-Entry Route Behavior
+
+The frontend now keeps one explicit route-local auth-entry contract:
+
+- signed-out visits to protected routes are redirected to `/sign-in` with a
+  `redirectTo` query string that preserves the intended protected destination
+- `/sign-in` and `/sign-up` resolve one safe in-app post-auth target before
+  they render the real Clerk components
+- already-signed-in visits to `/sign-in` or `/sign-up` short-circuit back to
+  the resolved protected target instead of showing auth UI again
+- if the Clerk publishable key is still the placeholder or missing, the
+  auth-entry routes render an explicit "Authentication unavailable" state
+  instead of failing silently
+
+Keep the documented local route values above unless the router contract itself
+changes. The Clerk components are mounted inside these app-owned React Router
+pages, not on separate hosted callback URLs.
 
 ## Backend Alignment Requirement
 

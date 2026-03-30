@@ -11,7 +11,9 @@ authenticated app shell for `frontend-web`.
 
 `frontend-web` SHALL define an initial browser route map that reserves
 `/sign-in` and `/sign-up` as public auth-entry routes and treats `/` as the
-first protected app-shell route for authenticated product pages.
+first protected app-shell route for authenticated product pages. Those
+app-owned auth-entry routes MUST host the real Clerk handoff behavior for
+sign-in and sign-up instead of remaining placeholder route shells.
 
 #### Scenario: Protected home route is part of the baseline map
 
@@ -24,6 +26,12 @@ first protected app-shell route for authenticated product pages.
 - **WHEN** a developer inspects the frontend route configuration
 - **THEN** the route map includes public `/sign-in` and `/sign-up` entries for
   Clerk auth handoff
+
+#### Scenario: Auth-entry routes no longer stop at placeholder content
+
+- **WHEN** an unauthenticated browser session opens `/sign-in` or `/sign-up`
+- **THEN** the app-owned route hands the browser into the real auth-entry flow
+  instead of stopping at a placeholder explanation page
 
 ### Requirement: Protected routes centralize auth-state gating
 

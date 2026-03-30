@@ -3,30 +3,48 @@ import { vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
 
-const { authState, currentUserProfileState, runtimeState } = vi.hoisted(() => ({
-  runtimeState: {
-    envValues: {
-      VITE_APP_ENV: "local",
-      VITE_API_BASE_URL: "http://localhost:8080",
-      VITE_CLERK_PUBLISHABLE_KEY: "pk_test_live_configured",
-      VITE_CLERK_SIGN_IN_URL: "/sign-in",
-      VITE_CLERK_SIGN_UP_URL: "/sign-up"
+const { authState, clerkRouteState, currentUserProfileState, runtimeState } =
+  vi.hoisted(() => ({
+    runtimeState: {
+      envValues: {
+        VITE_APP_ENV: "local",
+        VITE_API_BASE_URL: "http://localhost:8080",
+        VITE_CLERK_PUBLISHABLE_KEY: "pk_test_live_configured",
+        VITE_CLERK_SIGN_IN_URL: "/sign-in",
+        VITE_CLERK_SIGN_UP_URL: "/sign-up"
+      },
+      missingVars: [] as string[]
     },
-    missingVars: [] as string[]
+    authState: {
+      isAuthConfigured: true,
+      isLoaded: true,
+      isSignedIn: false,
+      getToken: vi.fn(async () => "test-token"),
+      signOut: vi.fn(async () => undefined),
+      signInUrl: "/sign-in",
+      signUpUrl: "/sign-up",
+      userDisplayName: null as string | null
+    },
+    clerkRouteState: {
+      signInRender: vi.fn(),
+      signUpRender: vi.fn()
+    },
+    currentUserProfileState: {
+      status: "loading"
+    } as Record<string, unknown>
+  }));
+
+vi.mock("@clerk/clerk-react", () => ({
+  SignIn: (props: Record<string, unknown>) => {
+    clerkRouteState.signInRender(props);
+
+    return <div data-testid="clerk-sign-in">Clerk SignIn</div>;
   },
-  authState: {
-    isAuthConfigured: true,
-    isLoaded: true,
-    isSignedIn: false,
-    getToken: vi.fn(async () => "test-token"),
-    signOut: vi.fn(async () => undefined),
-    signInUrl: "/sign-in",
-    signUpUrl: "/sign-up",
-    userDisplayName: null as string | null
-  },
-  currentUserProfileState: {
-    status: "loading"
-  } as Record<string, unknown>
+  SignUp: (props: Record<string, unknown>) => {
+    clerkRouteState.signUpRender(props);
+
+    return <div data-testid="clerk-sign-up">Clerk SignUp</div>;
+  }
 }));
 
 vi.mock("./stores/runtime/runtimeStore", () => ({
@@ -60,6 +78,8 @@ describe("App", () => {
     authState.userDisplayName = null;
     runtimeState.missingVars = [];
     authState.signOut.mockReset();
+    clerkRouteState.signInRender.mockReset();
+    clerkRouteState.signUpRender.mockReset();
     currentUserProfileState.status = "loading";
   });
 
@@ -69,16 +89,29 @@ describe("App", () => {
     expect(
       await screen.findByRole("heading", { name: "Sign in" })
     ).toBeInTheDocument();
+    expect(screen.getByTestId("clerk-sign-in")).toBeInTheDocument();
     expect(
       screen.getByText("Requested post-auth redirect target: /")
     ).toBeInTheDocument();
+    expect(clerkRouteState.signInRender).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fallbackRedirectUrl: "/",
+        forceRedirectUrl: "/",
+        path: "/sign-in",
+        routing: "path",
+        signInUrl: "/sign-in",
+        signUpFallbackRedirectUrl: "/",
+        signUpForceRedirectUrl: "/",
+        signUpUrl: "/sign-up"
+      })
+    );
     expect(window.location.pathname).toBe("/sign-in");
   });
 
-  it("renders an auth-unavailable state when Clerk is not configured", () => {
+  it("renders an auth-unavailable state when the auth-entry route lacks Clerk configuration", () => {
     authState.isAuthConfigured = false;
 
-    renderAppAt("/");
+    renderAppAt("/sign-in");
 
     expect(
       screen.getByRole("heading", { name: "Authentication unavailable" })
@@ -86,6 +119,7 @@ describe("App", () => {
     expect(
       screen.getByRole("heading", { name: "Runtime" })
     ).toBeInTheDocument();
+    expect(screen.queryByTestId("clerk-sign-in")).not.toBeInTheDocument();
   });
 
   it("renders the protected shell and current-user profile for authenticated users", async () => {
@@ -120,14 +154,71 @@ describe("App", () => {
     expect(authState.signOut).toHaveBeenCalledTimes(1);
   });
 
-  it("renders both auth-entry routes as explicit app-owned pages", () => {
+  it("passes a preserved protected redirect target into the real sign-in flow", () => {
+    renderAppAt("/sign-in?redirectTo=%2Fprofile%3Ftab%3Dsecurity");
+
+    expect(
+      screen.getByText(
+        "Requested post-auth redirect target: /profile?tab=security"
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("clerk-sign-in")).toBeInTheDocument();
+    expect(clerkRouteState.signInRender).toHaveBeenCalledWith(
+      expect.objectContaining({
+        forceRedirectUrl: "/profile?tab=security",
+        signUpForceRedirectUrl: "/profile?tab=security"
+      })
+    );
+  });
+
+  it("sanitizes auth-entry redirect targets that point back to auth routes", () => {
+    renderAppAt("/sign-up?redirectTo=%2Fsign-in%3FredirectTo%3D%252F");
+
+    expect(
+      screen.getByText("Requested post-auth redirect target: /")
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("clerk-sign-up")).toBeInTheDocument();
+    expect(clerkRouteState.signUpRender).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fallbackRedirectUrl: "/",
+        forceRedirectUrl: "/",
+        path: "/sign-up",
+        routing: "path",
+        signInFallbackRedirectUrl: "/",
+        signInForceRedirectUrl: "/",
+        signInUrl: "/sign-in"
+      })
+    );
+  });
+
+  it("short-circuits signed-in auth-entry visits back into the protected flow", async () => {
+    authState.isSignedIn = true;
+    authState.userDisplayName = "Casey Example";
+    Object.assign(currentUserProfileState, {
+      status: "success",
+      profile: {
+        userId: "user_123",
+        email: "casey@example.com",
+        displayName: "Casey Example",
+        role: "user"
+      }
+    });
+
+    renderAppAt("/sign-in?redirectTo=%2F");
+
+    expect(
+      await screen.findByRole("heading", { name: "Protected workspace" })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/");
+    expect(screen.queryByTestId("clerk-sign-in")).not.toBeInTheDocument();
+  });
+
+  it("renders the sign-up auth-entry route as a real Clerk-hosting page", () => {
     renderAppAt("/sign-up");
 
     expect(
       screen.getByRole("heading", { name: "Sign up" })
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/This route is reserved for the Clerk sign-up handoff/)
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("clerk-sign-up")).toBeInTheDocument();
   });
 });
