@@ -14,7 +14,8 @@ live in `openspec/specs/frontend-runtime/spec.md`.
 - `.env.example` also keeps the current optional Clerk route placeholders for
   local setup
 - the routed frontend baseline treats `/` as the protected app-shell home and
-  keeps `/sign-in` and `/sign-up` as explicit auth-entry routes
+  keeps `/sign-in` and `/sign-up` as explicit auth-entry routes that host the
+  real Clerk SPA flow
 - protected generated API calls now flow through one shared
   `@mpa-forge/platform-contracts-client` transport that resolves
   `VITE_API_BASE_URL`, injects the Clerk bearer token, and classifies protected
@@ -30,6 +31,9 @@ live in `openspec/specs/frontend-runtime/spec.md`.
   the publishable key is present
 - the protected route gate distinguishes auth-loading, auth-unavailable, and
   unauthenticated redirect behavior before protected content renders
+- the auth-entry routes preserve one safe `redirectTo` target, short-circuit
+  signed-in sessions back into the protected branch, and keep a route-local
+  unavailable state when Clerk config is missing
 - missing required runtime variables are surfaced in a dedicated "Missing
   configuration" section
 - `make run` uses the Bun-backed run script, builds the app, and serves the

@@ -86,6 +86,7 @@ the pinned toolchain automatically.
 For native frontend work:
 
 - Start support services from this repo: `make support-up`
+- Force a support-stack image rebuild before starting: `make support-up BUILD=1`
 - Run the frontend locally: `make run`
 - Stop support services: `make support-down`
 

@@ -4,6 +4,7 @@ BUN ?= bun
 NODE_VERSION := 24.13.1
 BUN_VERSION := 1.3.11
 PLATFORM_INFRA_DIR := ../platform-infra
+BUILD ?=
 
 .PHONY: help bootstrap doctor install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint test format format-check repo-lint repo-test repo-format repo-format-check run support-up support-down support-logs support-ps
 
@@ -22,7 +23,7 @@ help:
 	@echo "  format            Apply repo formatting"
 	@echo "  format-check      Check repo formatting without writing changes"
 	@echo "  run               Build and serve the frontend locally on port 3000"
-	@echo "  support-up        Start postgres + backend-api from platform-infra"
+	@echo "  support-up        Start postgres + backend-api from platform-infra (optional: BUILD=1)"
 	@echo "  support-down      Stop the shared local compose stack"
 	@echo "  support-logs      Stream postgres + backend-api logs"
 	@echo "  support-ps        Show shared local compose stack status"
@@ -109,7 +110,7 @@ run:
 	$(BUN) run run
 
 support-up:
-	$(MAKE) -C $(PLATFORM_INFRA_DIR) local-frontend-support-up
+	$(MAKE) -C $(PLATFORM_INFRA_DIR) BUILD=$(BUILD) local-frontend-support-up
 
 support-down:
 	$(MAKE) -C $(PLATFORM_INFRA_DIR) local-down
