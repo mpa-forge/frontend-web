@@ -15,6 +15,13 @@ live in `openspec/specs/frontend-runtime/spec.md`.
   local setup
 - the routed frontend baseline treats `/` as the protected app-shell home and
   keeps `/sign-in` and `/sign-up` as explicit auth-entry routes
+- protected generated API calls now flow through one shared
+  `@mpa-forge/platform-contracts-client` transport that resolves
+  `VITE_API_BASE_URL`, injects the Clerk bearer token, and classifies protected
+  API failures for the UI
+- the frontend bootstraps one root TanStack Query provider and uses shared
+  query-key ownership plus the standard `EnsureCurrentUserProfile` then
+  `GetCurrentUser` sequence for the protected current-user flow
 - the app shell reports the configured environment, API base URL, and whether
   the publishable key is present
 - the protected route gate distinguishes auth-loading, auth-unavailable, and

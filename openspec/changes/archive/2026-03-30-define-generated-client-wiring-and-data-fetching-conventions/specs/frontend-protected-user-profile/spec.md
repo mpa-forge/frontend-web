@@ -1,9 +1,5 @@
-# frontend-protected-user-profile Specification
+## MODIFIED Requirements
 
-## Purpose
-
-TBD - created by archiving change integrate-generated-client-frontend. Update Purpose after archive.
-## Requirements
 ### Requirement: Frontend renders the protected current-user profile flow
 
 The frontend SHALL provide the protected current-user profile flow as a page inside the protected app-shell route, using the shared generated-client integration and TanStack Query conventions to provision and read the current user profile before rendering the resulting data in the app.
@@ -35,4 +31,3 @@ The protected user-profile page SHALL distinguish loading, API error, and succes
 
 - **WHEN** the generated protected profile flow fails after authentication
 - **THEN** the frontend renders an API-error state derived from the shared protected data-access conventions instead of silently hiding the failure
-

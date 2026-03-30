@@ -77,6 +77,23 @@ Those backend values come from the same Clerk application and token setup. If
 the frontend and backend point at different Clerk apps or audiences, sign-in
 may succeed while protected API calls still fail.
 
+## Shared Protected API Flow
+
+The repo now owns one shared protected API access path for generated browser
+clients:
+
+- `VITE_API_BASE_URL` is resolved by the shared generated-client transport
+- Clerk session tokens are attached in that shared transport instead of
+  feature-local request code
+- protected server data is bootstrapped through one root TanStack Query
+  provider
+- the current-user profile flow runs `EnsureCurrentUserProfile` before
+  `GetCurrentUser`
+
+If Clerk is configured but protected API calls still fail, check both the
+frontend runtime values above and the matching backend issuer/audience config
+before debugging page-level code.
+
 ## Local Bootstrap Sequence
 
 1. Copy `.env.example` to `.env`
