@@ -1,4 +1,4 @@
-FROM node:24-alpine AS build
+FROM oven/bun:1.3.11-alpine AS build
 
 WORKDIR /app
 
@@ -14,14 +14,14 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_CLERK_SIGN_IN_URL=$VITE_CLERK_SIGN_IN_URL
 ENV VITE_CLERK_SIGN_UP_URL=$VITE_CLERK_SIGN_UP_URL
 
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
 COPY public ./public
 COPY src ./src
 COPY index.html vite.config.ts tsconfig.json eslint.config.mjs prettier.config.mjs ./
 
-RUN npm run build
+RUN bun run build
 
 FROM nginx:1.29-alpine AS runtime
 

@@ -11,6 +11,8 @@ requirements now live in `openspec/specs/frontend-container-runtime/spec.md`.
 
 - the Docker build stage accepts the current Vite-oriented build arguments for
   app environment, API base URL, and Clerk route configuration
+- the Docker build stage installs dependencies and runs the frontend build
+  through Bun
 - the runtime image remains `nginx:1.29-alpine` serving the built `dist/`
   bundle
 - the container exposes port `80`

@@ -18,13 +18,17 @@ Before making changes:
 - Consume generated TypeScript API clients from `platform-contracts`.
 - In local development, usually run natively while support services come from `platform-infra`.
 - Treat OpenSpec specs in `openspec/specs/` as the canonical behavior source for
-  documented frontend runtime, local-stack, and container behavior.
+  documented frontend runtime, local-stack, toolchain, testing, state, and
+  container behavior.
 
 ## Relevant Shared Constraints
 
 - Frontend is an authenticated SPA, CDN-oriented in cloud deployment.
 - Frontend should consume generated contract clients rather than hand-written DTOs once Phase 2 integration is in place.
 - Local frontend work should respect the hybrid local stack model documented in `platform-infra`.
+- Frontend package management and repo script execution use Bun.
+- Frontend unit/component tests use Vitest and browser tests use Playwright.
+- Shared client state uses Zustand when state outgrows local component variables.
 
 ## Consult Conditionally
 
@@ -36,6 +40,12 @@ Before making changes:
 - `openspec/specs/frontend-container-runtime/spec.md` when the task touches the
   Dockerfile, frontend build arguments, static serving behavior, or container
   healthchecks.
+- `openspec/specs/frontend-toolchain/spec.md` when the task touches Bun,
+  toolchain pins, bootstrap behavior, or repo-local script/test entrypoints.
+- `openspec/specs/frontend-testing/spec.md` when the task touches Vitest,
+  Playwright, or repo-local test coverage expectations.
+- `openspec/specs/frontend-state-management/spec.md` when the task touches
+  shared client state, store design, or Zustand usage.
 - `docs/frontend-runtime.md`, `docs/frontend-local-stack.md`, and
   `docs/frontend-container-runtime.md` when following existing `docs/`
   references or when a lightweight compatibility summary is enough.
@@ -113,8 +123,9 @@ These skills live outside this repo and are not auto-discovered from
 ## Typical Validation
 
 - `make lint`
+- `make test`
 - `make format-check`
-- `npm run build` when the task touches runtime or container behavior
+- `bun run build` when the task touches runtime or container behavior
 
 ## Priority of Instructions
 
