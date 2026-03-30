@@ -1,5 +1,6 @@
-import { useFrontendAuth } from "../../auth/FrontendAuthProvider";
-import { useCurrentUserProfileData } from "../../api/currentUserProfile";
+import { useFrontendAuth } from "../../../app/providers/FrontendAuthProvider";
+import { CurrentUserProfileDetails } from "../components/CurrentUserProfileDetails";
+import { useCurrentUserProfileData } from "../api/useCurrentUserProfileData";
 
 function getProtectedApiErrorHeading(
   errorKind: "configuration" | "auth" | "request"
@@ -34,12 +35,7 @@ export function CurrentUserProfilePage() {
             Signed in as{" "}
             {auth.userDisplayName || profileState.profile.displayName}.
           </p>
-          <ul>
-            <li>User ID: {profileState.profile.userId}</li>
-            <li>Email: {profileState.profile.email}</li>
-            <li>Display name: {profileState.profile.displayName}</li>
-            <li>Role: {profileState.profile.role}</li>
-          </ul>
+          <CurrentUserProfileDetails profile={profileState.profile} />
         </>
       )}
     </section>

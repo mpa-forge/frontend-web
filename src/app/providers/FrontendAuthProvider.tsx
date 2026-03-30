@@ -8,8 +8,8 @@ import {
 import type { PropsWithChildren } from "react";
 import { createContext, useContext } from "react";
 
-import { envValues } from "../stores/runtimeStore";
-import { signInRoute, signUpRoute, signedOutRoute } from "../routes/routes";
+import { signInRoute, signUpRoute, signedOutRoute } from "../../routes/paths";
+import { envValues } from "../../stores/runtime/runtimeStore";
 
 type TokenProvider = () => Promise<string | null>;
 type SignOutHandler = () => Promise<void>;

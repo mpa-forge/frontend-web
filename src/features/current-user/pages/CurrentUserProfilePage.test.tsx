@@ -10,11 +10,11 @@ const { authState, currentUserProfileState } = vi.hoisted(() => ({
   } as Record<string, unknown>
 }));
 
-vi.mock("../../auth/FrontendAuthProvider", () => ({
+vi.mock("../../../app/providers/FrontendAuthProvider", () => ({
   useFrontendAuth: () => authState
 }));
 
-vi.mock("../../api/currentUserProfile", () => ({
+vi.mock("../api/useCurrentUserProfileData", () => ({
   useCurrentUserProfileData: () => currentUserProfileState
 }));
 

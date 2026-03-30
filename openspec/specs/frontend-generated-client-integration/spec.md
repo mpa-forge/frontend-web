@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change integrate-generated-client-frontend. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Frontend code uses the generated contracts package
 
 `frontend-web` SHALL consume the generated browser contract surface from
@@ -46,4 +48,3 @@ Protected generated client calls MUST attach `Authorization: Bearer <token>` thr
 
 - **WHEN** the frontend invokes a protected generated `UserService` procedure
 - **THEN** the shared generated-client transport includes the current Clerk bearer token in the `Authorization` header instead of leaving token injection to feature-local request code
-

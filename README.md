@@ -5,6 +5,12 @@ React frontend application repository for the platform blueprint.
 ## Structure
 
 - `src/`: application source code
+  - `src/app/`: app-wide providers and authenticated shell modules
+  - `src/routes/`: route-owned path, boundary, and route-tree modules
+  - `src/features/`: feature-owned pages, components, and data-access wrappers
+  - `src/ui/`: reusable shared UI promoted out of feature folders
+  - `src/api/`: shared generated-client/query infrastructure
+  - `src/stores/`: app-wide Zustand stores
 - `public/`: static public assets
 - `scripts/`: local utility and developer scripts
 - `docs/`: compatibility-oriented frontend documentation entrypoints
@@ -18,6 +24,7 @@ Canonical behavior specs:
 - `openspec/specs/frontend-toolchain/spec.md`
 - `openspec/specs/frontend-testing/spec.md`
 - `openspec/specs/frontend-state-management/spec.md`
+- `openspec/specs/frontend-module-boundaries/spec.md`
 
 ## Toolchain
 
@@ -67,6 +74,8 @@ the pinned toolchain automatically.
 - Copy `.env.example` to `.env` for local development
 - Frontend auth bootstrap guide:
   - `docs/frontend-auth-bootstrap.md`
+- Frontend module-boundary guide:
+  - `docs/frontend-module-boundaries.md`
 - Canonical runtime/environment contract:
   - `openspec/specs/frontend-runtime/spec.md`
 - Compatibility summary:

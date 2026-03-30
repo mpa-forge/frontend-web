@@ -7,7 +7,7 @@ import {
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { UserService } from "@mpa-forge/platform-contracts-client";
 
-import { envValues } from "../stores/runtimeStore";
+import { envValues } from "../../stores/runtime/runtimeStore";
 
 export type TokenProvider = () => Promise<string | null>;
 
