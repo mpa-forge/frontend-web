@@ -16,6 +16,10 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.3",
+    "@connectrpc/connect": "1.7.0",
+    "@connectrpc/connect-web": "1.7.0",
+    "@mpa-forge/platform-contracts-client": "0.1.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "zustand": "^5.0.8"

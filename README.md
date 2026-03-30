@@ -40,6 +40,14 @@ Run the setup commands from the repository root:
 - Workstation checks: `make doctor`
 - Bootstrap: `make bootstrap`
 
+If this repo consumes published `@mpa-forge/*` packages from GitHub Packages,
+export `GITHUB_PACKAGES_TOKEN` before install so the committed `.npmrc` can
+authenticate package reads.
+
+- Bootstrap auth details:
+  - `docs/frontend-package-consumer-auth.md`
+  - `docs/frontend-auth-bootstrap.md`
+
 Bootstrap installs pinned frontend dependencies via Bun and validates the local
 toolchain. If `mise` or `asdf` is available, the script will use it to install
 the pinned toolchain automatically.
@@ -57,6 +65,8 @@ the pinned toolchain automatically.
 ## Environment
 
 - Copy `.env.example` to `.env` for local development
+- Frontend auth bootstrap guide:
+  - `docs/frontend-auth-bootstrap.md`
 - Canonical runtime/environment contract:
   - `openspec/specs/frontend-runtime/spec.md`
 - Compatibility summary:
@@ -96,3 +106,7 @@ For native frontend work:
   - `openspec/specs/frontend-testing/spec.md`
 - Shared client-state baseline:
   - `openspec/specs/frontend-state-management/spec.md`
+- Published package consumer auth bootstrap:
+  - `docs/frontend-package-consumer-auth.md`
+- Clerk/frontend auth bootstrap:
+  - `docs/frontend-auth-bootstrap.md`

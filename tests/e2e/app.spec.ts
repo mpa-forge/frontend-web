@@ -7,6 +7,14 @@ test("renders the frontend shell", async ({ page }) => {
     page.getByRole("heading", { name: "MPA Forge Blueprint" })
   ).toBeVisible();
   await expect(
+    page.getByRole("heading", { name: "Protected profile" })
+  ).toBeVisible();
+  await expect(
     page.getByRole("heading", { name: "Missing configuration" })
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "Authentication not configured. Set a real Clerk publishable key to exercise the protected API flow."
+    )
   ).toBeVisible();
 });
