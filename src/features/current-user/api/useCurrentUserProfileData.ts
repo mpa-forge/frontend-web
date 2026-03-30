@@ -6,14 +6,14 @@ import {
 } from "@mpa-forge/platform-contracts-client";
 import { useEffect, useRef } from "react";
 
-import { useFrontendAuth } from "../auth/FrontendAuthProvider";
+import { useFrontendAuth } from "../../../app/providers/FrontendAuthProvider";
 import {
   ProtectedApiError,
   classifyProtectedApiError,
   createProtectedApiRequestError,
   createUserServiceClient,
   type TokenProvider
-} from "./protectedApiClient";
+} from "../../../api/protected/protectedApiClient";
 
 export const protectedQueryKeys = {
   currentUserProfile: () => ["protected-api", "current-user-profile"] as const

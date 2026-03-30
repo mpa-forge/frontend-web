@@ -1,4 +1,4 @@
-import { envValues } from "../stores/runtimeStore";
+import { envValues } from "../stores/runtime/runtimeStore";
 
 function resolveLocalRoute(
   configuredRoute: string | undefined,

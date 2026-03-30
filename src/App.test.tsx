@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
@@ -28,17 +29,18 @@ const { authState, currentUserProfileState, runtimeState } = vi.hoisted(() => ({
   } as Record<string, unknown>
 }));
 
-vi.mock("./stores/runtimeStore", () => ({
+vi.mock("./stores/runtime/runtimeStore", () => ({
   envValues: runtimeState.envValues,
   useRuntimeStore: (selector: (state: typeof runtimeState) => unknown) =>
     selector(runtimeState)
 }));
 
-vi.mock("./auth/FrontendAuthProvider", () => ({
+vi.mock("./app/providers/FrontendAuthProvider", () => ({
+  FrontendAuthProvider: ({ children }: { children: ReactNode }) => children,
   useFrontendAuth: () => authState
 }));
 
-vi.mock("./api/currentUserProfile", () => ({
+vi.mock("./features/current-user/api/useCurrentUserProfileData", () => ({
   useCurrentUserProfileData: () => currentUserProfileState
 }));
 

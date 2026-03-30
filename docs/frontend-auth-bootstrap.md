@@ -94,6 +94,22 @@ If Clerk is configured but protected API calls still fail, check both the
 frontend runtime values above and the matching backend issuer/audience config
 before debugging page-level code.
 
+## Source Layout Baseline
+
+The frontend baseline now separates ownership by scope:
+
+- app-wide providers and shell modules live in `src/app/`
+- route paths, auth boundaries, and route-tree composition live in `src/routes/`
+- feature-owned pages, local components, and feature-specific API wrappers live
+  in `src/features/<feature>/`
+- shared generated-client/query infrastructure lives in `src/api/`
+- app-wide Zustand stores live in `src/stores/`
+- shared promoted UI lives in `src/ui/`
+
+Use `docs/frontend-module-boundaries.md` for the detailed promotion rules. Keep
+single-feature code inside the owning feature folder until it has real
+cross-feature reuse or clear app-wide ownership.
+
 ## Local Bootstrap Sequence
 
 1. Copy `.env.example` to `.env`

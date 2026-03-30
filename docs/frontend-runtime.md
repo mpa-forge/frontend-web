@@ -22,6 +22,10 @@ live in `openspec/specs/frontend-runtime/spec.md`.
 - the frontend bootstraps one root TanStack Query provider and uses shared
   query-key ownership plus the standard `EnsureCurrentUserProfile` then
   `GetCurrentUser` sequence for the protected current-user flow
+- the source layout baseline keeps app bootstrap and shell modules in
+  `src/app`, route modules in `src/routes`, feature-owned code in
+  `src/features/<feature>`, shared UI in `src/ui`, shared API infrastructure in
+  `src/api`, and app-wide Zustand stores in `src/stores`
 - the app shell reports the configured environment, API base URL, and whether
   the publishable key is present
 - the protected route gate distinguishes auth-loading, auth-unavailable, and
@@ -35,4 +39,5 @@ live in `openspec/specs/frontend-runtime/spec.md`.
 ## Update Rule
 
 When frontend runtime behavior changes, update the OpenSpec capability first and
-keep this file as a lightweight reader-friendly summary.
+keep this file as a lightweight reader-friendly summary. For source-layout
+ownership guidance, use `docs/frontend-module-boundaries.md`.

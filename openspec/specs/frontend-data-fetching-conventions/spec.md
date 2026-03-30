@@ -1,8 +1,11 @@
 # frontend-data-fetching-conventions Specification
 
 ## Purpose
+
 TBD - created by archiving change define-generated-client-wiring-and-data-fetching-conventions. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Frontend bootstraps one shared TanStack Query runtime
 
 `frontend-web` SHALL install and bootstrap one shared TanStack Query runtime for protected generated data flows instead of leaving query support to feature-local setup.
@@ -44,4 +47,3 @@ The shared protected data-access layer MUST classify missing configuration, auth
 
 - **WHEN** a protected generated request cannot be executed successfully
 - **THEN** the shared frontend data-access layer returns an explicit frontend error classification instead of leaving each feature to infer failure semantics itself
-

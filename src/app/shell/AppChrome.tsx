@@ -1,6 +1,7 @@
 import type { PropsWithChildren, ReactNode } from "react";
 
-import { useRuntimeStore } from "../stores/runtimeStore";
+import { DetailList } from "../../ui/data/DetailList";
+import { useRuntimeStore } from "../../stores/runtime/runtimeStore";
 
 type AppChromeProps = {
   title: string;
@@ -29,21 +30,31 @@ export function AppChrome({
       {children}
       <section>
         <h2>Runtime</h2>
-        <ul>
-          <li>Environment: {envValues.VITE_APP_ENV}</li>
-          <li>API base URL: {envValues.VITE_API_BASE_URL}</li>
-          <li>
-            Auth publishable key present:{" "}
-            {envValues.VITE_CLERK_PUBLISHABLE_KEY ? "yes" : "no"}
-          </li>
-        </ul>
+        <DetailList
+          items={[
+            { label: "Environment", value: envValues.VITE_APP_ENV },
+            { label: "API base URL", value: envValues.VITE_API_BASE_URL },
+            {
+              label: "Auth publishable key present",
+              value: envValues.VITE_CLERK_PUBLISHABLE_KEY ? "yes" : "no"
+            }
+          ]}
+        />
       </section>
       <section>
         <h2>Local stack</h2>
-        <ul>
-          <li>Frontend native mode uses `make run`.</li>
-          <li>Compose support mode provides backend API and Postgres.</li>
-        </ul>
+        <DetailList
+          items={[
+            {
+              label: "Frontend mode",
+              value: "Frontend native mode uses `make run`."
+            },
+            {
+              label: "Compose support",
+              value: "Compose support mode provides backend API and Postgres."
+            }
+          ]}
+        />
       </section>
       {missingVars.length > 0 ? (
         <section>
