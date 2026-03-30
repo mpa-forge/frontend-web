@@ -1,65 +1,22 @@
-import { useEffect, useState } from "react";
-
 import { useFrontendAuth } from "../../auth/FrontendAuthProvider";
-import { loadCurrentUserProfile } from "./loadCurrentUserProfile";
+import { useCurrentUserProfileData } from "../../api/currentUserProfile";
 
-type ProfileState =
-  | { status: "loading" }
-  | {
-      status: "error";
-      message: string;
-    }
-  | {
-      status: "success";
-      displayName: string;
-      email: string;
-      role: string;
-      userId: string;
-    };
+function getProtectedApiErrorHeading(
+  errorKind: "configuration" | "auth" | "request"
+) {
+  switch (errorKind) {
+    case "configuration":
+      return "Protected API configuration error";
+    case "auth":
+      return "Protected API auth error";
+    case "request":
+      return "Protected API request error";
+  }
+}
 
 export function CurrentUserProfilePage() {
   const auth = useFrontendAuth();
-  const [profileState, setProfileState] = useState<ProfileState>({
-    status: "loading"
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-
-    setProfileState({ status: "loading" });
-
-    void loadCurrentUserProfile(auth.getToken)
-      .then((profile) => {
-        if (cancelled) {
-          return;
-        }
-
-        setProfileState({
-          status: "success",
-          displayName: profile.displayName,
-          email: profile.email,
-          role: profile.role,
-          userId: profile.userId
-        });
-      })
-      .catch((error: unknown) => {
-        if (cancelled) {
-          return;
-        }
-
-        setProfileState({
-          status: "error",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Protected profile request failed."
-        });
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [auth]);
+  const profileState = useCurrentUserProfileData();
 
   return (
     <section>
@@ -67,17 +24,21 @@ export function CurrentUserProfilePage() {
       {profileState.status === "loading" ? (
         <p>Loading current user profile...</p>
       ) : profileState.status === "error" ? (
-        <p>Protected API error: {profileState.message}</p>
+        <>
+          <p>{getProtectedApiErrorHeading(profileState.error.kind)}</p>
+          <p>{profileState.error.message}</p>
+        </>
       ) : (
         <>
           <p>
-            Signed in as {auth.userDisplayName || profileState.displayName}.
+            Signed in as{" "}
+            {auth.userDisplayName || profileState.profile.displayName}.
           </p>
           <ul>
-            <li>User ID: {profileState.userId}</li>
-            <li>Email: {profileState.email}</li>
-            <li>Display name: {profileState.displayName}</li>
-            <li>Role: {profileState.role}</li>
+            <li>User ID: {profileState.profile.userId}</li>
+            <li>Email: {profileState.profile.email}</li>
+            <li>Display name: {profileState.profile.displayName}</li>
+            <li>Role: {profileState.profile.role}</li>
           </ul>
         </>
       )}

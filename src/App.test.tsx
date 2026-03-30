@@ -2,7 +2,7 @@ import { vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
 
-const { authState, loadCurrentUserProfile, runtimeState } = vi.hoisted(() => ({
+const { authState, currentUserProfileState, runtimeState } = vi.hoisted(() => ({
   runtimeState: {
     envValues: {
       VITE_APP_ENV: "local",
@@ -23,7 +23,9 @@ const { authState, loadCurrentUserProfile, runtimeState } = vi.hoisted(() => ({
     signUpUrl: "/sign-up",
     userDisplayName: null as string | null
   },
-  loadCurrentUserProfile: vi.fn()
+  currentUserProfileState: {
+    status: "loading"
+  } as Record<string, unknown>
 }));
 
 vi.mock("./stores/runtimeStore", () => ({
@@ -36,8 +38,8 @@ vi.mock("./auth/FrontendAuthProvider", () => ({
   useFrontendAuth: () => authState
 }));
 
-vi.mock("./features/current-user/loadCurrentUserProfile", () => ({
-  loadCurrentUserProfile
+vi.mock("./api/currentUserProfile", () => ({
+  useCurrentUserProfileData: () => currentUserProfileState
 }));
 
 import { App } from "./App";
@@ -55,8 +57,8 @@ describe("App", () => {
     authState.isSignedIn = false;
     authState.userDisplayName = null;
     runtimeState.missingVars = [];
-    loadCurrentUserProfile.mockReset();
     authState.signOut.mockReset();
+    currentUserProfileState.status = "loading";
   });
 
   it("redirects unauthenticated protected visits to the sign-in route", async () => {
@@ -87,11 +89,14 @@ describe("App", () => {
   it("renders the protected shell and current-user profile for authenticated users", async () => {
     authState.isSignedIn = true;
     authState.userDisplayName = "Casey Example";
-    loadCurrentUserProfile.mockResolvedValue({
-      userId: "user_123",
-      email: "casey@example.com",
-      displayName: "Casey Example",
-      role: "user"
+    Object.assign(currentUserProfileState, {
+      status: "success",
+      profile: {
+        userId: "user_123",
+        email: "casey@example.com",
+        displayName: "Casey Example",
+        role: "user"
+      }
     });
 
     const user = userEvent.setup();
@@ -102,8 +107,8 @@ describe("App", () => {
       screen.getByRole("heading", { name: "Protected workspace" })
     ).toBeInTheDocument();
     expect(
-      await screen.findByText("Signed in as Casey Example.")
-    ).toBeInTheDocument();
+      await screen.findAllByText("Signed in as Casey Example.")
+    ).toHaveLength(2);
     expect(
       screen.getByRole("link", { name: "Current user profile" })
     ).toHaveAttribute("href", "/");
