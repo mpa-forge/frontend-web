@@ -1,150 +1,152 @@
-import { useEffect, useState } from "react";
+import {
+  Link,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation
+} from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 
+import { AppChrome } from "./app/AppChrome";
 import { useFrontendAuth } from "./auth/FrontendAuthProvider";
-import { loadCurrentUserProfile } from "./features/current-user/loadCurrentUserProfile";
-import { useRuntimeStore } from "./stores/runtimeStore";
+import { CurrentUserProfilePage } from "./features/current-user/CurrentUserProfilePage";
+import { protectedHomeRoute, signInRoute, signUpRoute } from "./routes/routes";
 
-type ProfileState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | {
-      status: "error";
-      message: string;
-    }
-  | {
-      status: "success";
-      displayName: string;
-      email: string;
-      role: string;
-      userId: string;
-    };
+function buildRedirectUrl(signInUrl: string, redirectTo: string) {
+  const searchParams = new URLSearchParams({ redirectTo });
 
-export function App() {
-  const envValues = useRuntimeStore((state) => state.envValues);
-  const missingVars = useRuntimeStore((state) => state.missingVars);
+  return `${signInUrl}?${searchParams.toString()}`;
+}
+
+function AuthLoadingPage() {
+  return (
+    <AppChrome
+      title="Loading authentication"
+      summary="The protected app shell is waiting for Clerk session state before it decides whether to render protected content."
+    >
+      <p>Loading authentication state...</p>
+    </AppChrome>
+  );
+}
+
+function AuthUnavailablePage() {
+  return (
+    <AppChrome
+      title="Authentication unavailable"
+      summary="A usable Clerk publishable key is required before the protected app shell can run."
+    >
+      <p>
+        Authentication not configured. Set a real Clerk publishable key to
+        exercise the protected API flow.
+      </p>
+    </AppChrome>
+  );
+}
+
+function AuthEntryPage({ mode }: { mode: "sign-in" | "sign-up" }) {
   const auth = useFrontendAuth();
-  const [profileState, setProfileState] = useState<ProfileState>({
-    status: "idle"
-  });
+  const location = useLocation();
+  const redirectTo =
+    new URLSearchParams(location.search).get("redirectTo") ||
+    protectedHomeRoute;
 
-  useEffect(() => {
-    let cancelled = false;
+  if (auth.isLoaded && auth.isSignedIn) {
+    return <Navigate replace to={protectedHomeRoute} />;
+  }
 
-    if (missingVars.length > 0 || !auth.isAuthConfigured) {
-      setProfileState({ status: "idle" });
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    if (!auth.isLoaded || !auth.isSignedIn) {
-      setProfileState({ status: "idle" });
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    setProfileState({ status: "loading" });
-
-    void loadCurrentUserProfile(auth.getToken)
-      .then((profile) => {
-        if (cancelled) {
-          return;
-        }
-
-        setProfileState({
-          status: "success",
-          displayName: profile.displayName,
-          email: profile.email,
-          role: profile.role,
-          userId: profile.userId
-        });
-      })
-      .catch((error: unknown) => {
-        if (cancelled) {
-          return;
-        }
-
-        setProfileState({
-          status: "error",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Protected profile request failed."
-        });
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [auth, missingVars.length]);
+  const isSignIn = mode === "sign-in";
+  const alternateUrl = isSignIn ? auth.signUpUrl : auth.signInUrl;
+  const title = isSignIn ? "Sign in" : "Sign up";
+  const summary = isSignIn
+    ? "This route is reserved for the Clerk sign-in handoff that will host the real auth flow in P2-T10D."
+    : "This route is reserved for the Clerk sign-up handoff that will host the real auth flow in P2-T10D.";
 
   return (
-    <main>
-      <h1>MPA Forge Blueprint</h1>
-      <p>Phase 2 generated frontend contract-client baseline.</p>
-      <section>
-        <h2>Runtime</h2>
+    <AppChrome title={title} summary={summary}>
+      <p>
+        {auth.isAuthConfigured
+          ? `The frontend route exists now so the protected shell can redirect to a stable ${title.toLowerCase()} path.`
+          : "Authentication is not configured in this workspace yet, so the route currently serves as a documented placeholder."}
+      </p>
+      <p>Requested post-auth redirect target: {redirectTo}</p>
+      <p>
+        <Link to={protectedHomeRoute}>Return to protected home</Link>
+        {" or "}
+        <Link to={alternateUrl}>
+          {isSignIn ? "open sign up" : "open sign in"}
+        </Link>
+      </p>
+    </AppChrome>
+  );
+}
+
+function ProtectedRoute() {
+  const auth = useFrontendAuth();
+  const location = useLocation();
+  const redirectTo = `${location.pathname}${location.search}`;
+
+  if (!auth.isAuthConfigured) {
+    return <AuthUnavailablePage />;
+  }
+
+  if (!auth.isLoaded) {
+    return <AuthLoadingPage />;
+  }
+
+  if (!auth.isSignedIn) {
+    return (
+      <Navigate replace to={buildRedirectUrl(auth.signInUrl, redirectTo)} />
+    );
+  }
+
+  return <Outlet />;
+}
+
+function ProtectedAppShell() {
+  const auth = useFrontendAuth();
+
+  return (
+    <AppChrome
+      title="Protected workspace"
+      summary="Authenticated pages now live under a shared route-owned shell instead of a single top-level app screen."
+      actions={
+        <>
+          <p>Signed in as {auth.userDisplayName || "Authenticated user"}.</p>
+          <button onClick={() => void auth.signOut()} type="button">
+            Sign out
+          </button>
+        </>
+      }
+    >
+      <nav aria-label="Protected navigation">
         <ul>
-          <li>Environment: {envValues.VITE_APP_ENV}</li>
-          <li>API base URL: {envValues.VITE_API_BASE_URL}</li>
           <li>
-            Auth publishable key present:{" "}
-            {envValues.VITE_CLERK_PUBLISHABLE_KEY ? "yes" : "no"}
+            <Link to={protectedHomeRoute}>Current user profile</Link>
           </li>
         </ul>
-      </section>
-      <section>
-        <h2>Local stack</h2>
-        <ul>
-          <li>Frontend native mode uses `make run`.</li>
-          <li>Compose support mode provides backend API and Postgres.</li>
-        </ul>
-      </section>
-      <section>
-        <h2>Protected profile</h2>
-        {!auth.isAuthConfigured ? (
-          <p>
-            Authentication not configured. Set a real Clerk publishable key to
-            exercise the protected API flow.
-          </p>
-        ) : !auth.isLoaded ? (
-          <p>Loading authentication state...</p>
-        ) : !auth.isSignedIn ? (
-          <>
-            <p>Sign in required to load the protected current-user profile.</p>
-            <p>
-              <a href={auth.signInUrl}>Sign in</a>
-              {" or "}
-              <a href={auth.signUpUrl}>sign up</a>
-            </p>
-          </>
-        ) : profileState.status === "loading" ? (
-          <p>Loading current user profile...</p>
-        ) : profileState.status === "error" ? (
-          <p>Protected API error: {profileState.message}</p>
-        ) : profileState.status === "success" ? (
-          <>
-            <p>
-              Signed in as {auth.userDisplayName || profileState.displayName}.
-            </p>
-            <ul>
-              <li>User ID: {profileState.userId}</li>
-              <li>Email: {profileState.email}</li>
-              <li>Display name: {profileState.displayName}</li>
-              <li>Role: {profileState.role}</li>
-            </ul>
-          </>
-        ) : (
-          <p>Protected profile flow is ready to run.</p>
-        )}
-      </section>
-      {missingVars.length > 0 ? (
-        <section>
-          <h2>Missing configuration</h2>
-          <p>{missingVars.join(", ")}</p>
-        </section>
-      ) : null}
-    </main>
+      </nav>
+      <Outlet />
+    </AppChrome>
+  );
+}
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedAppShell />} path={protectedHomeRoute}>
+            <Route element={<CurrentUserProfilePage />} index />
+          </Route>
+        </Route>
+        <Route element={<AuthEntryPage mode="sign-in" />} path={signInRoute} />
+        <Route element={<AuthEntryPage mode="sign-up" />} path={signUpRoute} />
+        <Route
+          path="*"
+          element={<Navigate replace to={protectedHomeRoute} />}
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }

@@ -56,6 +56,15 @@ route structure:
 
 These are repo-local SPA routes, not values copied from the Clerk dashboard.
 
+Current route ownership:
+
+- `/`: protected app-shell home for the first authenticated feature flow
+- `/sign-in`: public auth-entry route reserved for Clerk sign-in handoff
+- `/sign-up`: public auth-entry route reserved for Clerk sign-up handoff
+
+The shared authenticated shell also owns the baseline sign-out handoff and
+returns signed-out browser sessions to the documented sign-in route.
+
 ## Backend Alignment Requirement
 
 The frontend alone is not enough for a working protected flow. The local
@@ -91,3 +100,4 @@ When a future frontend repo copies this baseline:
 4. make it explicit which values are copied from Clerk and which are repo-local
    routes
 5. document the backend alignment requirement for issuer and audience
+6. keep a documented sign-out destination for the protected app shell

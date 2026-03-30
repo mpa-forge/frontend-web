@@ -1,10 +1,4 @@
-# frontend-protected-user-profile Specification
-
-## Purpose
-
-TBD - created by archiving change integrate-generated-client-frontend. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Frontend renders the protected current-user profile flow
 
@@ -19,18 +13,6 @@ data in the app.
   that hosts the user-profile page
 - **THEN** the frontend calls the generated profile procedures and renders the
   returned current-user profile data inside the protected layout
-
-### Requirement: Profile read flow provisions before reading
-
-The protected user-profile flow MUST call
-`EnsureCurrentUserProfile` before `GetCurrentUser` so the frontend follows the
-backend provisioning contract for first-time authenticated users.
-
-#### Scenario: First authenticated flow provisions before read
-
-- **WHEN** the frontend runs the protected current-user flow
-- **THEN** it invokes `EnsureCurrentUserProfile` before requesting
-  `GetCurrentUser`
 
 ### Requirement: Protected user-profile states are explicit in the UI
 

@@ -2,20 +2,24 @@ import {
   ClerkProvider,
   type ClerkProviderProps,
   useAuth,
+  useClerk,
   useUser
 } from "@clerk/clerk-react";
 import type { PropsWithChildren } from "react";
 import { createContext, useContext } from "react";
 
 import { envValues } from "../stores/runtimeStore";
+import { signInRoute, signUpRoute, signedOutRoute } from "../routes/routes";
 
 type TokenProvider = () => Promise<string | null>;
+type SignOutHandler = () => Promise<void>;
 
 type FrontendAuthValue = {
   isAuthConfigured: boolean;
   isLoaded: boolean;
   isSignedIn: boolean;
   getToken: TokenProvider;
+  signOut: SignOutHandler;
   signInUrl: string;
   signUpUrl: string;
   userDisplayName: string | null;
@@ -26,8 +30,9 @@ const defaultAuthValue: FrontendAuthValue = {
   isLoaded: true,
   isSignedIn: false,
   getToken: async () => null,
-  signInUrl: envValues.VITE_CLERK_SIGN_IN_URL || "/sign-in",
-  signUpUrl: envValues.VITE_CLERK_SIGN_UP_URL || "/sign-up",
+  signOut: async () => undefined,
+  signInUrl: signInRoute,
+  signUpUrl: signUpRoute,
   userDisplayName: null
 };
 
@@ -41,6 +46,7 @@ function hasConfiguredClerkPublishableKey(
 
 function ClerkSessionAuthProvider({ children }: PropsWithChildren) {
   const { getToken, isLoaded, isSignedIn } = useAuth();
+  const clerk = useClerk();
   const { user } = useUser();
 
   return (
@@ -50,8 +56,16 @@ function ClerkSessionAuthProvider({ children }: PropsWithChildren) {
         isLoaded,
         isSignedIn: Boolean(isSignedIn),
         getToken: async () => (await getToken()) ?? null,
-        signInUrl: envValues.VITE_CLERK_SIGN_IN_URL || "/sign-in",
-        signUpUrl: envValues.VITE_CLERK_SIGN_UP_URL || "/sign-up",
+        signOut: async () => {
+          const redirectUrl =
+            typeof window === "undefined"
+              ? signedOutRoute
+              : new URL(signedOutRoute, window.location.origin).toString();
+
+          await clerk.signOut({ redirectUrl });
+        },
+        signInUrl: signInRoute,
+        signUpUrl: signUpRoute,
         userDisplayName:
           user?.fullName || user?.primaryEmailAddress?.emailAddress || null
       }}
@@ -74,8 +88,8 @@ export function FrontendAuthProvider({ children }: PropsWithChildren) {
 
   const clerkProps: ClerkProviderProps = {
     publishableKey,
-    signInUrl: envValues.VITE_CLERK_SIGN_IN_URL,
-    signUpUrl: envValues.VITE_CLERK_SIGN_UP_URL,
+    signInUrl: signInRoute,
+    signUpUrl: signUpRoute,
     signInFallbackRedirectUrl:
       envValues.VITE_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL,
     signUpFallbackRedirectUrl:

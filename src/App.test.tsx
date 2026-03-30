@@ -1,4 +1,5 @@
 import { vi } from "vitest";
+import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
 
 const { authState, loadCurrentUserProfile, runtimeState } = vi.hoisted(() => ({
@@ -17,6 +18,7 @@ const { authState, loadCurrentUserProfile, runtimeState } = vi.hoisted(() => ({
     isLoaded: true,
     isSignedIn: false,
     getToken: vi.fn(async () => "test-token"),
+    signOut: vi.fn(async () => undefined),
     signInUrl: "/sign-in",
     signUpUrl: "/sign-up",
     userDisplayName: null as string | null
@@ -40,6 +42,12 @@ vi.mock("./features/current-user/loadCurrentUserProfile", () => ({
 
 import { App } from "./App";
 
+function renderAppAt(pathname: string) {
+  window.history.replaceState({}, "", pathname);
+
+  return render(<App />);
+}
+
 describe("App", () => {
   beforeEach(() => {
     authState.isAuthConfigured = true;
@@ -48,29 +56,35 @@ describe("App", () => {
     authState.userDisplayName = null;
     runtimeState.missingVars = [];
     loadCurrentUserProfile.mockReset();
+    authState.signOut.mockReset();
   });
 
-  it("renders the unauthenticated protected profile state", () => {
-    render(<App />);
+  it("redirects unauthenticated protected visits to the sign-in route", async () => {
+    renderAppAt("/");
 
     expect(
-      screen.getByRole("heading", { name: "MPA Forge Blueprint" })
+      await screen.findByRole("heading", { name: "Sign in" })
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Phase 2 generated frontend contract-client baseline.")
+      screen.getByText("Requested post-auth redirect target: /")
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Sign in required to load the protected current-user profile."
-      )
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
-      "href",
-      "/sign-in"
-    );
+    expect(window.location.pathname).toBe("/sign-in");
   });
 
-  it("renders the protected profile returned by the generated client flow", async () => {
+  it("renders an auth-unavailable state when Clerk is not configured", () => {
+    authState.isAuthConfigured = false;
+
+    renderAppAt("/");
+
+    expect(
+      screen.getByRole("heading", { name: "Authentication unavailable" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Runtime" })
+    ).toBeInTheDocument();
+  });
+
+  it("renders the protected shell and current-user profile for authenticated users", async () => {
     authState.isSignedIn = true;
     authState.userDisplayName = "Casey Example";
     loadCurrentUserProfile.mockResolvedValue({
@@ -80,26 +94,33 @@ describe("App", () => {
       role: "user"
     });
 
-    render(<App />);
+    const user = userEvent.setup();
+
+    renderAppAt("/");
 
     expect(
-      screen.getByText("Loading current user profile...")
+      screen.getByRole("heading", { name: "Protected workspace" })
     ).toBeInTheDocument();
     expect(
       await screen.findByText("Signed in as Casey Example.")
     ).toBeInTheDocument();
-    expect(screen.getByText("Email: casey@example.com")).toBeInTheDocument();
-    expect(screen.getByText("Role: user")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Current user profile" })
+    ).toHaveAttribute("href", "/");
+
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(authState.signOut).toHaveBeenCalledTimes(1);
   });
 
-  it("renders a protected API error state when the profile request fails", async () => {
-    authState.isSignedIn = true;
-    loadCurrentUserProfile.mockRejectedValue(new Error("401 Unauthorized"));
-
-    render(<App />);
+  it("renders both auth-entry routes as explicit app-owned pages", () => {
+    renderAppAt("/sign-up");
 
     expect(
-      await screen.findByText("Protected API error: 401 Unauthorized")
+      screen.getByRole("heading", { name: "Sign up" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/This route is reserved for the Clerk sign-up handoff/)
     ).toBeInTheDocument();
   });
 });
