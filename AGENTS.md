@@ -82,46 +82,6 @@ Before making changes:
   or switching frontend consumption from sibling-workspace usage to published
   package usage.
 
-## Shared Skills
-
-Run `make sync-agent-skills` before major changes so the local common skill
-copies stay current.
-
-- `automated-ai-worker` at `.codex/skills/automated-ai-worker/SKILL.md` when
-  the repo is being changed by an automated AI worker or when following the same
-  autonomous workflow manually.
-- `platform-code-documentation` at
-  `.codex/skills/platform-code-documentation/SKILL.md` when updating docs,
-  comments, OpenSpec material, or deciding the correct documentation layer.
-- `platform-env-contracts` at
-  `.codex/skills/platform-env-contracts/SKILL.md` when creating or changing
-  `.env.example`, browser-exposed config contracts, or startup/runtime
-  validation guidance.
-- `platform-validation-workflow` at
-  `.codex/skills/platform-validation-workflow/SKILL.md` when deciding which
-  repo-local validation commands to run or whether pre-commit should run.
-- `platform-git-release-workflow` at
-  `.codex/skills/platform-git-release-workflow/SKILL.md` when branch, merge,
-  release, or clean-worktree decisions are involved.
-- `platform-windows-tooling` at
-  `.codex/skills/platform-windows-tooling/SKILL.md` when the task involves
-  Windows workstation setup, PATH/tool resolution, or `make`/`bash`/`python`
-  troubleshooting.
-- `platform-blueprint-repo-workflow` at
-  `.codex/skills/platform-blueprint-repo-workflow/SKILL.md` when work is driven
-  by `platform-blueprint-specs` and spans this repo plus sibling implementation
-  repositories.
-- `openspec-propose` at
-  `../platform-blueprint-specs/.codex/skills/openspec-propose/SKILL.md` when
-  creating a new OpenSpec change proposal and its initial artifacts.
-- `openspec-apply-change` at
-  `../platform-blueprint-specs/.codex/skills/openspec-apply-change/SKILL.md`
-  when implementing or continuing tasks from an OpenSpec change.
-- `openspec-archive-change` at
-  `../platform-blueprint-specs/.codex/skills/openspec-archive-change/SKILL.md`
-  when a completed OpenSpec change needs to be validated, synced into canonical
-  specs, and archived.
-
 ## Typical Validation
 
 - `make lint`
