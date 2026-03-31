@@ -76,6 +76,10 @@ Before making changes:
 - `../platform-contracts/docs/consumer-auth-usage.md` when the task touches
   protected API calls, bearer-token handling, or the consumer-facing auth
   contract.
+- `../platform-contracts/docs/contract-release-workflow.md` when the task
+  touches released contract versions, GitHub Packages installs, version pinning,
+  or switching frontend consumption from sibling-workspace usage to published
+  package usage.
 
 ## Shared Skills
 
