@@ -1,111 +1,164 @@
-import { vi } from "vitest";
+import type { Interceptor } from "@connectrpc/connect";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { clientState, observabilityState, transportState } = vi.hoisted(() => ({
-  transportState: {
-    config: null as {
-      baseUrl: string;
-      interceptors: Array<
-        (
-          next: (req: unknown) => Promise<unknown>
-        ) => (req: unknown) => Promise<unknown>
-      >;
-    } | null
+const {
+  applyRequestCorrelationHeadersMock,
+  createClientMock,
+  createConnectTransportMock,
+  frontendObservabilityRuntime,
+  getCurrentFrontendRouteMock,
+  runtimeEnv
+} = vi.hoisted(() => ({
+  applyRequestCorrelationHeadersMock: vi.fn((headers: Headers) => {
+    headers.set("x-platform-correlation-id", "req-123");
+
+    return {
+      correlationId: "req-123",
+      headers: {
+        "x-platform-correlation-id": "req-123"
+      }
+    };
+  }),
+  createClientMock: vi.fn(),
+  createConnectTransportMock: vi.fn((options) => options),
+  frontendObservabilityRuntime: {
+    createRequestContext: vi.fn()
   },
-  clientState: {
-    service: null as unknown,
-    transport: null as unknown
-  },
-  observabilityState: {
-    applyRequestCorrelationHeaders: vi.fn(),
-    runtime: { name: "frontend-observability-runtime" }
-  }
-}));
-
-vi.mock("@connectrpc/connect", () => ({
-  Code: {},
-  ConnectError: class ConnectError extends Error {
-    rawMessage = this.message;
-    code = "unknown";
-  },
-  createClient: (service: unknown, transport: unknown) => {
-    clientState.service = service;
-    clientState.transport = transport;
-
-    return { service, transport };
-  }
-}));
-
-vi.mock("@connectrpc/connect-web", () => ({
-  createConnectTransport: (config: typeof transportState.config) => {
-    transportState.config = config;
-
-    return { kind: "connect-transport", config };
-  }
-}));
-
-vi.mock("@mpa-forge/platform-contracts-client", () => ({
-  UserService: { typeName: "blueprint.user.v1.UserService" }
-}));
-
-vi.mock("@mpa-forge/platform-frontend-observability/frontend-web", () => ({
-  applyRequestCorrelationHeaders:
-    observabilityState.applyRequestCorrelationHeaders
-}));
-
-vi.mock("../../app/observability/runtime", () => ({
-  frontendObservabilityRuntime: observabilityState.runtime,
-  getCurrentBrowserPath: () =>
-    `${window.location.pathname}${window.location.search}`,
-  getCurrentRouteTemplate: () => window.location.pathname
-}));
-
-vi.mock("../../stores/runtime/runtimeStore", () => ({
-  envValues: {
+  getCurrentFrontendRouteMock: vi.fn(() => "/profile?tab=security"),
+  runtimeEnv: {
     VITE_API_BASE_URL: "http://localhost:8080"
   }
 }));
 
-import { createUserServiceClient } from "./protectedApiClient";
+vi.mock("@connectrpc/connect", async () => {
+  const actual = await vi.importActual<typeof import("@connectrpc/connect")>(
+    "@connectrpc/connect"
+  );
 
-describe("createUserServiceClient", () => {
+  return {
+    ...actual,
+    createClient: createClientMock
+  };
+});
+
+vi.mock("@connectrpc/connect-web", () => ({
+  createConnectTransport: createConnectTransportMock
+}));
+
+vi.mock("@mpa-forge/platform-frontend-observability/frontend-web", () => ({
+  applyRequestCorrelationHeaders: applyRequestCorrelationHeadersMock
+}));
+
+vi.mock("../../app/observability/runtime", () => ({
+  frontendObservabilityRuntime,
+  getCurrentFrontendRoute: getCurrentFrontendRouteMock
+}));
+
+vi.mock("../../stores/runtime/runtimeStore", () => ({
+  envValues: runtimeEnv
+}));
+
+import {
+  ProtectedApiError,
+  createUserServiceClient
+} from "./protectedApiClient";
+
+type InterceptorRequest = Parameters<ReturnType<Interceptor>>[0];
+
+function composeInterceptors(interceptors: Interceptor[]) {
+  const next = vi.fn(async (req: InterceptorRequest) => ({
+    stream: false as const,
+    service: req.service,
+    method: req.method,
+    header: new Headers(),
+    trailer: new Headers(),
+    message: {}
+  }));
+
+  return {
+    invoke: interceptors.reduceRight((current, interceptor) => {
+      return interceptor(current);
+    }, next),
+    next
+  };
+}
+
+function createRequest(): InterceptorRequest {
+  return {
+    stream: false,
+    service: {
+      typeName: "blueprint.user.v1.UserService"
+    } as InterceptorRequest["service"],
+    method: {
+      name: "GetCurrentUser"
+    } as InterceptorRequest["method"],
+    url: "http://localhost:8080/blueprint.user.v1.UserService/GetCurrentUser",
+    init: {},
+    signal: new AbortController().signal,
+    header: new Headers(),
+    contextValues: {} as InterceptorRequest["contextValues"],
+    message: {} as InterceptorRequest["message"]
+  };
+}
+
+describe("protectedApiClient", () => {
   beforeEach(() => {
-    transportState.config = null;
-    clientState.service = null;
-    clientState.transport = null;
-    observabilityState.applyRequestCorrelationHeaders.mockReset();
-    window.history.replaceState({}, "", "/profile?tab=security");
+    runtimeEnv.VITE_API_BASE_URL = "http://localhost:8080";
+    applyRequestCorrelationHeadersMock.mockClear();
+    createClientMock.mockReset();
+    createConnectTransportMock.mockClear();
+    getCurrentFrontendRouteMock.mockClear();
   });
 
-  it("configures the shared transport with correlation and auth interceptors", async () => {
-    const getToken = vi.fn(async () => "test-token");
+  it("wires the shared transport with the configured API base URL", () => {
+    createUserServiceClient(async () => "token-123");
 
-    createUserServiceClient(getToken);
+    expect(createConnectTransportMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baseUrl: "http://localhost:8080",
+        interceptors: expect.any(Array),
+        useBinaryFormat: false
+      })
+    );
+  });
 
-    expect(transportState.config?.baseUrl).toBe("http://localhost:8080");
-    expect(transportState.config?.interceptors).toHaveLength(3);
+  it("adds bearer auth and observability correlation headers to protected requests", async () => {
+    createUserServiceClient(async () => "token-123");
 
-    const request = {
-      header: new Headers(),
-      method: { name: "GetCurrentUser" },
-      service: { typeName: "blueprint.user.v1.UserService" }
-    };
-    const next = vi.fn(async () => ({ ok: true }));
-    const handler =
-      transportState.config?.interceptors.reduceRight(
-        (currentNext, interceptor) => interceptor(currentNext),
-        next
-      ) ?? next;
+    const interceptors = createConnectTransportMock.mock.calls[0]?.[0]
+      .interceptors as Interceptor[];
+    const { invoke, next } = composeInterceptors(interceptors);
+    const req = createRequest();
 
-    await handler(request);
+    await invoke(req);
 
-    expect(
-      observabilityState.applyRequestCorrelationHeaders
-    ).toHaveBeenCalledWith(request.header, observabilityState.runtime, {
-      route: "/profile?tab=security",
-      routeTemplate: "/profile",
-      operation: "UserService.GetCurrentUser"
+    expect(req.header.get("Authorization")).toBe("Bearer token-123");
+    expect(applyRequestCorrelationHeadersMock).toHaveBeenCalledWith(
+      req.header,
+      frontendObservabilityRuntime,
+      {
+        operation: "UserService.GetCurrentUser",
+        route: "/profile?tab=security"
+      }
+    );
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it("classifies Clerk token acquisition failures for protected requests", async () => {
+    createUserServiceClient(async () => {
+      throw new Error("session unavailable");
     });
-    expect(request.header.get("Authorization")).toBe("Bearer test-token");
-    expect(getToken).toHaveBeenCalledTimes(1);
+
+    const interceptors = createConnectTransportMock.mock.calls[0]?.[0]
+      .interceptors as Interceptor[];
+    const { invoke } = composeInterceptors(interceptors);
+
+    await expect(invoke(createRequest())).rejects.toMatchObject<
+      Partial<ProtectedApiError>
+    >({
+      kind: "auth",
+      message:
+        "Unable to acquire a Clerk session token for the protected API request."
+    });
   });
 });

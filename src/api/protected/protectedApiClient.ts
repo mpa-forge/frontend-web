@@ -5,13 +5,12 @@ import {
   type Interceptor
 } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
-import { UserService } from "@mpa-forge/platform-contracts-client";
 import { applyRequestCorrelationHeaders } from "@mpa-forge/platform-frontend-observability/frontend-web";
+import { UserService } from "@mpa-forge/platform-contracts-client";
 
 import {
   frontendObservabilityRuntime,
-  getCurrentBrowserPath,
-  getCurrentRouteTemplate
+  getCurrentFrontendRoute
 } from "../../app/observability/runtime";
 import { envValues } from "../../stores/runtime/runtimeStore";
 
@@ -142,21 +141,14 @@ function createClerkBearerTokenInterceptor(
   };
 }
 
-function buildProtectedApiOperationName(req: {
-  method: { name: string };
-  service: { typeName: string };
-}) {
-  const serviceName = req.service.typeName.split(".").at(-1) ?? "Service";
-
-  return `${serviceName}.${req.method.name}`;
-}
-
-function createRequestCorrelationInterceptor(): Interceptor {
+function createProtectedApiObservabilityInterceptor(): Interceptor {
   return (next) => async (req) => {
+    const serviceName =
+      req.service.typeName.split(".").at(-1) ?? req.service.typeName;
+
     applyRequestCorrelationHeaders(req.header, frontendObservabilityRuntime, {
-      route: getCurrentBrowserPath(),
-      routeTemplate: getCurrentRouteTemplate(),
-      operation: buildProtectedApiOperationName(req)
+      operation: `${serviceName}.${req.method.name}`,
+      route: getCurrentFrontendRoute()
     });
 
     return next(req);
@@ -174,7 +166,7 @@ export function createUserServiceClient(getToken: TokenProvider) {
     useBinaryFormat: false,
     interceptors: [
       createProtectedApiErrorInterceptor(),
-      createRequestCorrelationInterceptor(),
+      createProtectedApiObservabilityInterceptor(),
       createClerkBearerTokenInterceptor(getToken)
     ]
   });

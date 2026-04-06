@@ -9,7 +9,7 @@ Create a local `.env` from `.env.example` and fill these frontend values:
 
 ```dotenv
 VITE_APP_ENV=local
-VITE_APP_RELEASE=local-dev
+VITE_APP_RELEASE=dev
 VITE_API_BASE_URL=http://localhost:8080
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_replace_me
 VITE_CLERK_SIGN_IN_URL=/sign-in
@@ -18,13 +18,15 @@ VITE_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/
 VITE_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 VITE_OBSERVABILITY_ENABLED=false
 VITE_OBSERVABILITY_ENDPOINT=
+VITE_OBSERVABILITY_TRANSPORT=
+VITE_OBSERVABILITY_DATASET=
 ```
 
 Meaning:
 
 - `VITE_APP_ENV`: frontend runtime environment label, usually `local`
-- `VITE_APP_RELEASE`: browser-visible release label used by shared frontend
-  observability metadata, usually `local-dev` for local work
+- `VITE_APP_RELEASE`: frontend release identifier passed into the shared
+  observability runtime, usually a local dev marker such as `dev`
 - `VITE_API_BASE_URL`: browser-visible API base URL, usually
   `http://localhost:8080` for local work
 - `VITE_CLERK_PUBLISHABLE_KEY`: Clerk frontend publishable key for the SPA
@@ -32,10 +34,14 @@ Meaning:
 - `VITE_CLERK_SIGN_UP_URL`: SPA route that hosts the sign-up flow
 - `VITE_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL`: where Clerk returns after sign-in
 - `VITE_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL`: where Clerk returns after sign-up
-- `VITE_OBSERVABILITY_ENABLED`: browser-safe toggle for the shared frontend
-  observability runtime
-- `VITE_OBSERVABILITY_ENDPOINT`: optional browser-safe endpoint used by the
-  shared frontend observability emitter
+- `VITE_OBSERVABILITY_ENABLED`: browser-safe toggle for shared frontend
+  observability bootstrap
+- `VITE_OBSERVABILITY_ENDPOINT`: optional provider-supported browser ingest URL
+  consumed by the shared package
+- `VITE_OBSERVABILITY_TRANSPORT`: optional browser-safe transport hint for the
+  shared package
+- `VITE_OBSERVABILITY_DATASET`: optional browser-safe dataset hint for the
+  shared package
 
 ## Where To Get The Clerk Values
 
@@ -110,30 +116,30 @@ The repo now owns one shared protected API access path for generated browser
 clients:
 
 - `VITE_API_BASE_URL` is resolved by the shared generated-client transport
-- Clerk session tokens are attached in that shared transport instead of
-  feature-local request code
-- frontend-to-backend correlation headers are attached in that same shared
-  transport through `@mpa-forge/platform-frontend-observability`
+- Clerk session tokens plus shared frontend observability correlation headers
+  are attached in that shared transport instead of feature-local request code
 - protected server data is bootstrapped through one root TanStack Query
   provider
 - the current-user profile flow runs `EnsureCurrentUserProfile` before
   `GetCurrentUser`
 
-## Shared Frontend Observability Flow
+## Shared Frontend Observability Baseline
 
-`frontend-web` now consumes the sibling
-`@mpa-forge/platform-frontend-observability` package for the browser telemetry
-baseline:
+`frontend-web` now consumes the shared
+`@mpa-forge/platform-frontend-observability` package from GitHub Packages.
+Provide `GITHUB_PACKAGES_TOKEN` during install so Bun can read the published
+package through the committed `.npmrc` mapping.
 
-- one app-owned runtime is created from browser-safe `VITE_*` values
-- auth state updates the shared observability user context
-- React Router route transitions emit shared page views
-- browser errors, unhandled promise rejections, and Web Vitals are captured
-  from app bootstrap instead of feature pages
+The current integration contract is:
 
-Do not add provider secrets, tokens, or static auth headers to frontend
-observability config. The shared package accepts browser-safe endpoint metadata
-only.
+- app bootstrap initializes the shared package once with browser-safe app,
+  environment, release, and optional ingest config
+- React Router page views are tracked from one router-owned module
+- Clerk auth state is synchronized into the shared runtime through the package's
+  `frontend-web` helper
+- global browser errors and Web Vitals are reported through the shared runtime
+- browser delivery uses the provider-supported Faro/Grafana frontend path and
+  does not require a dedicated browser telemetry endpoint in `backend-api`
 
 If Clerk is configured but protected API calls still fail, check both the
 frontend runtime values above and the matching backend issuer/audience config
@@ -159,12 +165,13 @@ cross-feature reuse or clear app-wide ownership.
 
 1. Copy `.env.example` to `.env`
 2. Fill the real `VITE_CLERK_PUBLISHABLE_KEY`
-3. Keep the local auth routes unless the frontend router changes
-4. Confirm `backend-api/.env` is already filled with matching Clerk auth values
-5. Export `GITHUB_PACKAGES_TOKEN` if the repo consumes published
+3. Set `VITE_APP_RELEASE` to the current local release marker or build id
+4. Keep the local auth routes unless the frontend router changes
+5. Confirm `backend-api/.env` is already filled with matching Clerk auth values
+6. Export `GITHUB_PACKAGES_TOKEN` so Bun can install published
    `@mpa-forge/*` packages
-6. Run `make bootstrap`
-7. Start local services and frontend using the repo-local workflow
+7. Run `make bootstrap`
+8. Start local services and frontend using the repo-local workflow
 
 ## Future Frontend Repos Forked From This One
 

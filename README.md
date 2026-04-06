@@ -58,7 +58,8 @@ authenticate package reads.
 
 Bootstrap installs pinned frontend dependencies via Bun and validates the local
 toolchain. If `mise` or `asdf` is available, the script will use it to install
-the pinned toolchain automatically.
+the pinned toolchain automatically. The shared frontend observability package is
+now consumed from GitHub Packages like the shared contracts client.
 
 ## Lint and Format
 
@@ -77,6 +78,8 @@ the pinned toolchain automatically.
   - `docs/frontend-auth-bootstrap.md`
 - Frontend module-boundary guide:
   - `docs/frontend-module-boundaries.md`
+- Frontend observability integration:
+  - `openspec/specs/frontend-observability-integration/spec.md`
 - Canonical runtime/environment contract:
   - `openspec/specs/frontend-runtime/spec.md`
 - Compatibility summary:

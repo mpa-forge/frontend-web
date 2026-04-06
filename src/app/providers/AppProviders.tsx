@@ -11,8 +11,8 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <FrontendObservabilityProvider runtime={frontendObservabilityRuntime}>
       <FrontendAuthProvider>
+        <FrontendObservabilityBootstrap />
         <QueryClientProvider client={appQueryClient}>
-          <FrontendObservabilityBootstrap />
           {children}
         </QueryClientProvider>
       </FrontendAuthProvider>

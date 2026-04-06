@@ -1,83 +1,84 @@
 import { startWebVitalsTracking } from "@mpa-forge/platform-frontend-observability";
-import { useFrontendWebUserContext } from "@mpa-forge/platform-frontend-observability/frontend-web";
+import { useFrontendObservabilityRuntime } from "@mpa-forge/platform-frontend-observability/react";
+import { syncFrontendWebUserContext } from "@mpa-forge/platform-frontend-observability/frontend-web";
 import { useEffect } from "react";
 
-import {
-  frontendObservabilityRuntime,
-  getCurrentBrowserPath,
-  getCurrentRouteTemplate
-} from "../observability/runtime";
+import { getCurrentFrontendRoute } from "../observability/runtime";
 import { useFrontendAuth } from "./FrontendAuthProvider";
 
-let hasStartedWebVitalsTracking = false;
-
-function normalizePromiseRejectionReason(reason: unknown) {
+function buildUnhandledRejectionMessage(reason: unknown) {
   if (reason instanceof Error) {
+    return reason.message;
+  }
+
+  if (typeof reason === "string" && reason.length > 0) {
     return reason;
   }
 
-  if (typeof reason === "string") {
-    return new Error(reason);
-  }
-
-  return new Error("Unhandled promise rejection");
+  return "Unhandled promise rejection";
 }
 
 export function FrontendObservabilityBootstrap() {
   const auth = useFrontendAuth();
-
-  useFrontendWebUserContext(
-    {
-      isSignedIn: auth.isSignedIn,
-      userId: auth.userId,
-      sessionId: auth.sessionId,
-      userDisplayName: auth.userDisplayName
-    },
-    frontendObservabilityRuntime
-  );
+  const runtime = useFrontendObservabilityRuntime();
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
+    syncFrontendWebUserContext(runtime, {
+      isSignedIn: auth.isSignedIn,
+      sessionId: auth.sessionId,
+      userDisplayName: auth.userDisplayName,
+      userId: auth.userId
+    });
+  }, [
+    auth.isSignedIn,
+    auth.sessionId,
+    auth.userDisplayName,
+    auth.userId,
+    runtime
+  ]);
 
-    const handleError = (event: ErrorEvent) => {
-      frontendObservabilityRuntime.captureError({
-        error: event.error ?? event.message,
-        route: getCurrentBrowserPath(),
-        routeTemplate: getCurrentRouteTemplate()
+  useEffect(() => {
+    const removeWebVitalsTracking = startWebVitalsTracking(runtime);
+
+    return () => {
+      removeWebVitalsTracking();
+    };
+  }, [runtime]);
+
+  useEffect(() => {
+    const handleWindowError = (event: ErrorEvent) => {
+      runtime.captureError({
+        error: event.error ?? new Error(event.message || "Window error"),
+        message: event.message || undefined,
+        route: getCurrentFrontendRoute(),
+        attributes: {
+          source: "window.error"
+        }
       });
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      frontendObservabilityRuntime.captureError({
-        error: normalizePromiseRejectionReason(event.reason),
-        message: "Unhandled promise rejection",
-        route: getCurrentBrowserPath(),
-        routeTemplate: getCurrentRouteTemplate()
+      runtime.captureError({
+        error: event.reason,
+        message: buildUnhandledRejectionMessage(event.reason),
+        route: getCurrentFrontendRoute(),
+        attributes: {
+          source: "window.unhandledrejection"
+        }
       });
     };
 
-    window.addEventListener("error", handleError);
+    window.addEventListener("error", handleWindowError);
     window.addEventListener("unhandledrejection", handleUnhandledRejection);
 
     return () => {
-      window.removeEventListener("error", handleError);
+      window.removeEventListener("error", handleWindowError);
       window.removeEventListener(
         "unhandledrejection",
         handleUnhandledRejection
       );
     };
-  }, []);
-
-  useEffect(() => {
-    if (hasStartedWebVitalsTracking) {
-      return;
-    }
-
-    hasStartedWebVitalsTracking = true;
-    startWebVitalsTracking(frontendObservabilityRuntime);
-  }, []);
+  }, [runtime]);
 
   return null;
 }

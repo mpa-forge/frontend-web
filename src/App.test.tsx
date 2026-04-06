@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { vi } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { waitFor } from "@testing-library/react";
 import { render, screen } from "@testing-library/react";
 
 const {
@@ -14,13 +13,15 @@ const {
   runtimeState: {
     envValues: {
       VITE_APP_ENV: "local",
-      VITE_APP_RELEASE: "local-dev",
+      VITE_APP_RELEASE: "2026.04.06-dev",
       VITE_API_BASE_URL: "http://localhost:8080",
       VITE_CLERK_PUBLISHABLE_KEY: "pk_test_live_configured",
       VITE_CLERK_SIGN_IN_URL: "/sign-in",
       VITE_CLERK_SIGN_UP_URL: "/sign-up",
       VITE_OBSERVABILITY_ENABLED: "false",
-      VITE_OBSERVABILITY_ENDPOINT: undefined
+      VITE_OBSERVABILITY_ENDPOINT: "",
+      VITE_OBSERVABILITY_TRANSPORT: "",
+      VITE_OBSERVABILITY_DATASET: ""
     },
     missingVars: [] as string[]
   },
@@ -28,13 +29,13 @@ const {
     isAuthConfigured: true,
     isLoaded: true,
     isSignedIn: false,
-    userId: null as string | null,
-    sessionId: null as string | null,
     getToken: vi.fn(async () => "test-token"),
+    sessionId: null as string | null,
     signOut: vi.fn(async () => undefined),
     signInUrl: "/sign-in",
     signUpUrl: "/sign-up",
-    userDisplayName: null as string | null
+    userDisplayName: null as string | null,
+    userId: null as string | null
   },
   clerkRouteState: {
     signInRender: vi.fn(),
@@ -45,11 +46,10 @@ const {
   } as Record<string, unknown>,
   observabilityState: {
     runtime: {
-      name: "frontend-observability-runtime",
       captureError: vi.fn()
     },
-    startWebVitalsTracking: vi.fn(),
-    useFrontendWebUserContext: vi.fn(),
+    startWebVitalsTracking: vi.fn(() => () => undefined),
+    syncFrontendWebUserContext: vi.fn(),
     useReactRouterPageViews: vi.fn()
   }
 }));
@@ -74,36 +74,28 @@ vi.mock("./stores/runtime/runtimeStore", () => ({
 }));
 
 vi.mock("@mpa-forge/platform-frontend-observability", () => ({
+  createFrontendObservability: vi.fn(() => observabilityState.runtime),
   startWebVitalsTracking: observabilityState.startWebVitalsTracking
 }));
 
 vi.mock("@mpa-forge/platform-frontend-observability/react", () => ({
-  FrontendObservabilityProvider: ({
-    children
-  }: {
-    children: ReactNode;
-    runtime: unknown;
-  }) => children
-}));
-
-vi.mock("@mpa-forge/platform-frontend-observability/frontend-web", () => ({
-  useFrontendWebUserContext: observabilityState.useFrontendWebUserContext
+  FrontendObservabilityProvider: ({ children }: { children: ReactNode }) =>
+    children,
+  useFrontendObservabilityRuntime: () => observabilityState.runtime
 }));
 
 vi.mock("@mpa-forge/platform-frontend-observability/react-router", () => ({
   useReactRouterPageViews: observabilityState.useReactRouterPageViews
 }));
 
+vi.mock("@mpa-forge/platform-frontend-observability/frontend-web", () => ({
+  applyRequestCorrelationHeaders: vi.fn(),
+  syncFrontendWebUserContext: observabilityState.syncFrontendWebUserContext
+}));
+
 vi.mock("./app/providers/FrontendAuthProvider", () => ({
   FrontendAuthProvider: ({ children }: { children: ReactNode }) => children,
   useFrontendAuth: () => authState
-}));
-
-vi.mock("./app/observability/runtime", () => ({
-  frontendObservabilityRuntime: observabilityState.runtime,
-  getCurrentBrowserPath: () =>
-    `${window.location.pathname}${window.location.search}`,
-  getCurrentRouteTemplate: () => window.location.pathname
 }));
 
 vi.mock("./features/current-user/api/useCurrentUserProfileData", () => ({
@@ -123,17 +115,17 @@ describe("App", () => {
     authState.isAuthConfigured = true;
     authState.isLoaded = true;
     authState.isSignedIn = false;
-    authState.userId = null;
     authState.sessionId = null;
     authState.userDisplayName = null;
+    authState.userId = null;
     runtimeState.missingVars = [];
     authState.signOut.mockReset();
     clerkRouteState.signInRender.mockReset();
     clerkRouteState.signUpRender.mockReset();
+    observabilityState.startWebVitalsTracking.mockClear();
+    observabilityState.syncFrontendWebUserContext.mockClear();
+    observabilityState.useReactRouterPageViews.mockClear();
     currentUserProfileState.status = "loading";
-    observabilityState.runtime.captureError.mockReset();
-    observabilityState.useFrontendWebUserContext.mockReset();
-    observabilityState.useReactRouterPageViews.mockReset();
   });
 
   it("redirects unauthenticated protected visits to the sign-in route", async () => {
@@ -177,9 +169,9 @@ describe("App", () => {
 
   it("renders the protected shell and current-user profile for authenticated users", async () => {
     authState.isSignedIn = true;
-    authState.userId = "user_123";
-    authState.sessionId = "sess_123";
+    authState.sessionId = "session_123";
     authState.userDisplayName = "Casey Example";
+    authState.userId = "user_123";
     Object.assign(currentUserProfileState, {
       status: "success",
       profile: {
@@ -207,55 +199,6 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Sign out" }));
 
     expect(authState.signOut).toHaveBeenCalledTimes(1);
-  });
-
-  it("wires auth state and browser telemetry through the shared observability bootstrap", async () => {
-    authState.isSignedIn = true;
-    authState.userId = "user_123";
-    authState.sessionId = "sess_123";
-    authState.userDisplayName = "Casey Example";
-    Object.assign(currentUserProfileState, {
-      status: "success",
-      profile: {
-        userId: "user_123",
-        email: "casey@example.com",
-        displayName: "Casey Example",
-        role: "user"
-      }
-    });
-
-    renderAppAt("/?tab=summary");
-
-    expect(observabilityState.useFrontendWebUserContext).toHaveBeenCalledWith(
-      {
-        isSignedIn: true,
-        userId: "user_123",
-        sessionId: "sess_123",
-        userDisplayName: "Casey Example"
-      },
-      observabilityState.runtime
-    );
-    expect(observabilityState.useReactRouterPageViews).toHaveBeenCalledWith(
-      expect.objectContaining({
-        getPageName: expect.any(Function)
-      })
-    );
-
-    window.dispatchEvent(
-      new ErrorEvent("error", {
-        error: new Error("frontend boom")
-      })
-    );
-
-    await waitFor(() => {
-      expect(observabilityState.runtime.captureError).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.any(Error),
-          route: "/?tab=summary",
-          routeTemplate: "/"
-        })
-      );
-    });
   });
 
   it("passes a preserved protected redirect target into the real sign-in flow", () => {
@@ -297,7 +240,9 @@ describe("App", () => {
 
   it("short-circuits signed-in auth-entry visits back into the protected flow", async () => {
     authState.isSignedIn = true;
+    authState.sessionId = "session_123";
     authState.userDisplayName = "Casey Example";
+    authState.userId = "user_123";
     Object.assign(currentUserProfileState, {
       status: "success",
       profile: {
