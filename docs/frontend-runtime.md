@@ -9,17 +9,27 @@ live in `openspec/specs/frontend-runtime/spec.md`.
 
 ## Quick Reference
 
-- required browser-exposed runtime variables remain `VITE_APP_ENV`,
-  `VITE_API_BASE_URL`, and `VITE_CLERK_PUBLISHABLE_KEY`
-- `.env.example` also keeps the current optional Clerk route placeholders for
-  local setup
+- required browser-exposed runtime variables are `VITE_APP_ENV`,
+  `VITE_APP_RELEASE`, `VITE_API_BASE_URL`, and
+  `VITE_CLERK_PUBLISHABLE_KEY`
+- `.env.example` also keeps the current optional Clerk route placeholders plus
+  browser-safe observability values for the shared frontend observability
+  package
 - the routed frontend baseline treats `/` as the protected app-shell home and
   keeps `/sign-in` and `/sign-up` as explicit auth-entry routes that host the
   real Clerk SPA flow
 - protected generated API calls now flow through one shared
   `@mpa-forge/platform-contracts-client` transport that resolves
-  `VITE_API_BASE_URL`, injects the Clerk bearer token, and classifies protected
-  API failures for the UI
+  `VITE_API_BASE_URL`, injects the Clerk bearer token, attaches shared
+  frontend observability correlation headers, and classifies protected API
+  failures for the UI
+- the frontend now initializes browser observability through
+  `@mpa-forge/platform-frontend-observability`, keeping Grafana Faro setup
+  inside the shared package while `frontend-web` provides only browser-safe
+  app and ingest config
+- route-driven page views, auth-driven user context, global browser errors, and
+  Web Vitals are wired through the shared observability package instead of
+  bespoke page-level telemetry code
 - the frontend bootstraps one root TanStack Query provider and uses shared
   query-key ownership plus the standard `EnsureCurrentUserProfile` then
   `GetCurrentUser` sequence for the protected current-user flow

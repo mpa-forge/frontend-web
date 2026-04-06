@@ -45,6 +45,7 @@ For CI or automation:
 
 ## Why This Exists
 
-The shared contracts client is published to GitHub Packages. Keeping the scope
-mapping in the repo and the token outside the repo gives frontend consumers a
-repeatable install path without baking credentials into source control.
+The shared contracts client and shared frontend observability package are
+published to GitHub Packages. Keeping the scope mapping in the repo and the
+token outside the repo gives frontend consumers a repeatable install path
+without baking credentials into source control.

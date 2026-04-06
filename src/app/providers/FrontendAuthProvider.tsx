@@ -19,10 +19,12 @@ type FrontendAuthValue = {
   isLoaded: boolean;
   isSignedIn: boolean;
   getToken: TokenProvider;
+  sessionId: string | null;
   signOut: SignOutHandler;
   signInUrl: string;
   signUpUrl: string;
   userDisplayName: string | null;
+  userId: string | null;
 };
 
 const defaultAuthValue: FrontendAuthValue = {
@@ -30,10 +32,12 @@ const defaultAuthValue: FrontendAuthValue = {
   isLoaded: true,
   isSignedIn: false,
   getToken: async () => null,
+  sessionId: null,
   signOut: async () => undefined,
   signInUrl: signInRoute,
   signUpUrl: signUpRoute,
-  userDisplayName: null
+  userDisplayName: null,
+  userId: null
 };
 
 const FrontendAuthContext = createContext<FrontendAuthValue>(defaultAuthValue);
@@ -45,7 +49,7 @@ function hasConfiguredClerkPublishableKey(
 }
 
 function ClerkSessionAuthProvider({ children }: PropsWithChildren) {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const { getToken, isLoaded, isSignedIn, sessionId } = useAuth();
   const clerk = useClerk();
   const { user } = useUser();
 
@@ -56,6 +60,7 @@ function ClerkSessionAuthProvider({ children }: PropsWithChildren) {
         isLoaded,
         isSignedIn: Boolean(isSignedIn),
         getToken: async () => (await getToken()) ?? null,
+        sessionId: sessionId ?? null,
         signOut: async () => {
           const redirectUrl =
             typeof window === "undefined"
@@ -67,7 +72,8 @@ function ClerkSessionAuthProvider({ children }: PropsWithChildren) {
         signInUrl: signInRoute,
         signUpUrl: signUpRoute,
         userDisplayName:
-          user?.fullName || user?.primaryEmailAddress?.emailAddress || null
+          user?.fullName || user?.primaryEmailAddress?.emailAddress || null,
+        userId: user?.id ?? null
       }}
     >
       {children}

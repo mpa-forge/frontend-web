@@ -5,8 +5,13 @@ import {
   type Interceptor
 } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
+import { applyRequestCorrelationHeaders } from "@mpa-forge/platform-frontend-observability/frontend-web";
 import { UserService } from "@mpa-forge/platform-contracts-client";
 
+import {
+  frontendObservabilityRuntime,
+  getCurrentFrontendRoute
+} from "../../app/observability/runtime";
 import { envValues } from "../../stores/runtime/runtimeStore";
 
 export type TokenProvider = () => Promise<string | null>;
@@ -136,6 +141,20 @@ function createClerkBearerTokenInterceptor(
   };
 }
 
+function createProtectedApiObservabilityInterceptor(): Interceptor {
+  return (next) => async (req) => {
+    const serviceName =
+      req.service.typeName.split(".").at(-1) ?? req.service.typeName;
+
+    applyRequestCorrelationHeaders(req.header, frontendObservabilityRuntime, {
+      operation: `${serviceName}.${req.method.name}`,
+      route: getCurrentFrontendRoute()
+    });
+
+    return next(req);
+  };
+}
+
 /**
  * createUserServiceClient centralizes the generated browser transport so
  * protected feature code does not duplicate API base URL or bearer-token
@@ -147,6 +166,7 @@ export function createUserServiceClient(getToken: TokenProvider) {
     useBinaryFormat: false,
     interceptors: [
       createProtectedApiErrorInterceptor(),
+      createProtectedApiObservabilityInterceptor(),
       createClerkBearerTokenInterceptor(getToken)
     ]
   });

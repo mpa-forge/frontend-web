@@ -3,36 +3,56 @@ import { vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
 
-const { authState, clerkRouteState, currentUserProfileState, runtimeState } =
-  vi.hoisted(() => ({
-    runtimeState: {
-      envValues: {
-        VITE_APP_ENV: "local",
-        VITE_API_BASE_URL: "http://localhost:8080",
-        VITE_CLERK_PUBLISHABLE_KEY: "pk_test_live_configured",
-        VITE_CLERK_SIGN_IN_URL: "/sign-in",
-        VITE_CLERK_SIGN_UP_URL: "/sign-up"
-      },
-      missingVars: [] as string[]
+const {
+  authState,
+  clerkRouteState,
+  currentUserProfileState,
+  observabilityState,
+  runtimeState
+} = vi.hoisted(() => ({
+  runtimeState: {
+    envValues: {
+      VITE_APP_ENV: "local",
+      VITE_APP_RELEASE: "2026.04.06-dev",
+      VITE_API_BASE_URL: "http://localhost:8080",
+      VITE_CLERK_PUBLISHABLE_KEY: "pk_test_live_configured",
+      VITE_CLERK_SIGN_IN_URL: "/sign-in",
+      VITE_CLERK_SIGN_UP_URL: "/sign-up",
+      VITE_OBSERVABILITY_ENABLED: "false",
+      VITE_OBSERVABILITY_ENDPOINT: "",
+      VITE_OBSERVABILITY_TRANSPORT: "",
+      VITE_OBSERVABILITY_DATASET: ""
     },
-    authState: {
-      isAuthConfigured: true,
-      isLoaded: true,
-      isSignedIn: false,
-      getToken: vi.fn(async () => "test-token"),
-      signOut: vi.fn(async () => undefined),
-      signInUrl: "/sign-in",
-      signUpUrl: "/sign-up",
-      userDisplayName: null as string | null
+    missingVars: [] as string[]
+  },
+  authState: {
+    isAuthConfigured: true,
+    isLoaded: true,
+    isSignedIn: false,
+    getToken: vi.fn(async () => "test-token"),
+    sessionId: null as string | null,
+    signOut: vi.fn(async () => undefined),
+    signInUrl: "/sign-in",
+    signUpUrl: "/sign-up",
+    userDisplayName: null as string | null,
+    userId: null as string | null
+  },
+  clerkRouteState: {
+    signInRender: vi.fn(),
+    signUpRender: vi.fn()
+  },
+  currentUserProfileState: {
+    status: "loading"
+  } as Record<string, unknown>,
+  observabilityState: {
+    runtime: {
+      captureError: vi.fn()
     },
-    clerkRouteState: {
-      signInRender: vi.fn(),
-      signUpRender: vi.fn()
-    },
-    currentUserProfileState: {
-      status: "loading"
-    } as Record<string, unknown>
-  }));
+    startWebVitalsTracking: vi.fn(() => () => undefined),
+    syncFrontendWebUserContext: vi.fn(),
+    useReactRouterPageViews: vi.fn()
+  }
+}));
 
 vi.mock("@clerk/clerk-react", () => ({
   SignIn: (props: Record<string, unknown>) => {
@@ -51,6 +71,26 @@ vi.mock("./stores/runtime/runtimeStore", () => ({
   envValues: runtimeState.envValues,
   useRuntimeStore: (selector: (state: typeof runtimeState) => unknown) =>
     selector(runtimeState)
+}));
+
+vi.mock("@mpa-forge/platform-frontend-observability", () => ({
+  createFrontendObservability: vi.fn(() => observabilityState.runtime),
+  startWebVitalsTracking: observabilityState.startWebVitalsTracking
+}));
+
+vi.mock("@mpa-forge/platform-frontend-observability/react", () => ({
+  FrontendObservabilityProvider: ({ children }: { children: ReactNode }) =>
+    children,
+  useFrontendObservabilityRuntime: () => observabilityState.runtime
+}));
+
+vi.mock("@mpa-forge/platform-frontend-observability/react-router", () => ({
+  useReactRouterPageViews: observabilityState.useReactRouterPageViews
+}));
+
+vi.mock("@mpa-forge/platform-frontend-observability/frontend-web", () => ({
+  applyRequestCorrelationHeaders: vi.fn(),
+  syncFrontendWebUserContext: observabilityState.syncFrontendWebUserContext
 }));
 
 vi.mock("./app/providers/FrontendAuthProvider", () => ({
@@ -75,11 +115,16 @@ describe("App", () => {
     authState.isAuthConfigured = true;
     authState.isLoaded = true;
     authState.isSignedIn = false;
+    authState.sessionId = null;
     authState.userDisplayName = null;
+    authState.userId = null;
     runtimeState.missingVars = [];
     authState.signOut.mockReset();
     clerkRouteState.signInRender.mockReset();
     clerkRouteState.signUpRender.mockReset();
+    observabilityState.startWebVitalsTracking.mockClear();
+    observabilityState.syncFrontendWebUserContext.mockClear();
+    observabilityState.useReactRouterPageViews.mockClear();
     currentUserProfileState.status = "loading";
   });
 
@@ -124,7 +169,9 @@ describe("App", () => {
 
   it("renders the protected shell and current-user profile for authenticated users", async () => {
     authState.isSignedIn = true;
+    authState.sessionId = "session_123";
     authState.userDisplayName = "Casey Example";
+    authState.userId = "user_123";
     Object.assign(currentUserProfileState, {
       status: "success",
       profile: {
@@ -193,7 +240,9 @@ describe("App", () => {
 
   it("short-circuits signed-in auth-entry visits back into the protected flow", async () => {
     authState.isSignedIn = true;
+    authState.sessionId = "session_123";
     authState.userDisplayName = "Casey Example";
+    authState.userId = "user_123";
     Object.assign(currentUserProfileState, {
       status: "success",
       profile: {
