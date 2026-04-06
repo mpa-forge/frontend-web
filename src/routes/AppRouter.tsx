@@ -4,11 +4,13 @@ import { ProtectedAppShell } from "../app/shell/ProtectedAppShell";
 import { CurrentUserProfilePage } from "../features/current-user/pages/CurrentUserProfilePage";
 import { AuthEntryRoute } from "./auth/AuthEntryRoute";
 import { ProtectedRouteBoundary } from "./boundaries/ProtectedRouteBoundary";
+import { FrontendObservabilityRouteTracker } from "./FrontendObservabilityRouteTracker";
 import { protectedHomeRoute, signInRoute, signUpRoute } from "./paths";
 
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <FrontendObservabilityRouteTracker />
       <Routes>
         <Route element={<ProtectedRouteBoundary />}>
           <Route element={<ProtectedAppShell />} path={protectedHomeRoute}>
