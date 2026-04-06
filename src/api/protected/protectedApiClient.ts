@@ -6,13 +6,7 @@ import {
 } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { UserService } from "@mpa-forge/platform-contracts-client";
-import { applyRequestCorrelationHeaders } from "@mpa-forge/platform-frontend-observability/frontend-web";
 
-import {
-  frontendObservabilityRuntime,
-  getCurrentBrowserPath,
-  getCurrentRouteTemplate
-} from "../../app/observability/runtime";
 import { envValues } from "../../stores/runtime/runtimeStore";
 
 export type TokenProvider = () => Promise<string | null>;
@@ -142,27 +136,6 @@ function createClerkBearerTokenInterceptor(
   };
 }
 
-function buildProtectedApiOperationName(req: {
-  method: { name: string };
-  service: { typeName: string };
-}) {
-  const serviceName = req.service.typeName.split(".").at(-1) ?? "Service";
-
-  return `${serviceName}.${req.method.name}`;
-}
-
-function createRequestCorrelationInterceptor(): Interceptor {
-  return (next) => async (req) => {
-    applyRequestCorrelationHeaders(req.header, frontendObservabilityRuntime, {
-      route: getCurrentBrowserPath(),
-      routeTemplate: getCurrentRouteTemplate(),
-      operation: buildProtectedApiOperationName(req)
-    });
-
-    return next(req);
-  };
-}
-
 /**
  * createUserServiceClient centralizes the generated browser transport so
  * protected feature code does not duplicate API base URL or bearer-token
@@ -174,7 +147,6 @@ export function createUserServiceClient(getToken: TokenProvider) {
     useBinaryFormat: false,
     interceptors: [
       createProtectedApiErrorInterceptor(),
-      createRequestCorrelationInterceptor(),
       createClerkBearerTokenInterceptor(getToken)
     ]
   });

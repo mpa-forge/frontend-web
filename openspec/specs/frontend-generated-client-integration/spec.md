@@ -42,16 +42,9 @@ The frontend SHALL create generated Connect clients through a reusable browser t
 
 ### Requirement: Protected generated calls send Clerk bearer tokens
 
-Protected generated client calls MUST attach `Authorization: Bearer <token>`
-through the shared generated-client transport path using the current Clerk
-session token in the browser. That same shared transport path MUST also attach
-frontend observability correlation metadata, including the runtime-generated
-correlation id and the shared frontend app/environment/release labels, instead
-of leaving correlation-header construction to feature-local request code.
+Protected generated client calls MUST attach `Authorization: Bearer <token>` through the shared generated-client transport path using the current Clerk session token in the browser.
 
-#### Scenario: UserService calls carry auth and correlation metadata
+#### Scenario: UserService calls carry the browser bearer token
 
 - **WHEN** the frontend invokes a protected generated `UserService` procedure
-- **THEN** the shared generated-client transport includes the current Clerk
-  bearer token and the shared frontend observability correlation headers on the
-  outgoing request
+- **THEN** the shared generated-client transport includes the current Clerk bearer token in the `Authorization` header instead of leaving token injection to feature-local request code

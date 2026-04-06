@@ -20,7 +20,6 @@
     "@connectrpc/connect": "1.7.0",
     "@connectrpc/connect-web": "1.7.0",
     "@mpa-forge/platform-contracts-client": "0.1.1",
-    "@mpa-forge/platform-frontend-observability": "../platform-frontend-observability",
     "@tanstack/react-query": "^5.95.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

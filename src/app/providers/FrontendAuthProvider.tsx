@@ -18,8 +18,6 @@ type FrontendAuthValue = {
   isAuthConfigured: boolean;
   isLoaded: boolean;
   isSignedIn: boolean;
-  userId: string | null;
-  sessionId: string | null;
   getToken: TokenProvider;
   signOut: SignOutHandler;
   signInUrl: string;
@@ -31,8 +29,6 @@ const defaultAuthValue: FrontendAuthValue = {
   isAuthConfigured: false,
   isLoaded: true,
   isSignedIn: false,
-  userId: null,
-  sessionId: null,
   getToken: async () => null,
   signOut: async () => undefined,
   signInUrl: signInRoute,
@@ -49,7 +45,7 @@ function hasConfiguredClerkPublishableKey(
 }
 
 function ClerkSessionAuthProvider({ children }: PropsWithChildren) {
-  const { getToken, isLoaded, isSignedIn, sessionId } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const clerk = useClerk();
   const { user } = useUser();
 
@@ -59,8 +55,6 @@ function ClerkSessionAuthProvider({ children }: PropsWithChildren) {
         isAuthConfigured: true,
         isLoaded,
         isSignedIn: Boolean(isSignedIn),
-        userId: user?.id ?? null,
-        sessionId: sessionId ?? null,
         getToken: async () => (await getToken()) ?? null,
         signOut: async () => {
           const redirectUrl =

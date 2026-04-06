@@ -9,26 +9,17 @@ live in `openspec/specs/frontend-runtime/spec.md`.
 
 ## Quick Reference
 
-- required browser-exposed runtime variables now include `VITE_APP_ENV`,
-  `VITE_APP_RELEASE`, `VITE_API_BASE_URL`, and
-  `VITE_CLERK_PUBLISHABLE_KEY`
-- `.env.example` also keeps the current optional Clerk route placeholders plus
-  the browser-safe observability toggles `VITE_OBSERVABILITY_ENABLED` and
-  `VITE_OBSERVABILITY_ENDPOINT`
+- required browser-exposed runtime variables remain `VITE_APP_ENV`,
+  `VITE_API_BASE_URL`, and `VITE_CLERK_PUBLISHABLE_KEY`
+- `.env.example` also keeps the current optional Clerk route placeholders for
+  local setup
 - the routed frontend baseline treats `/` as the protected app-shell home and
   keeps `/sign-in` and `/sign-up` as explicit auth-entry routes that host the
   real Clerk SPA flow
-- `frontend-web` now initializes one shared browser observability runtime from
-  `@mpa-forge/platform-frontend-observability` through app-owned bootstrap
-  modules in `src/app`
-- authenticated route transitions are tracked from one router-owned tracker
-  instead of feature-page telemetry hooks
-- browser errors, unhandled promise rejections, and Web Vitals are captured
-  once from the shared app bootstrap
 - protected generated API calls now flow through one shared
   `@mpa-forge/platform-contracts-client` transport that resolves
-  `VITE_API_BASE_URL`, injects the Clerk bearer token, adds frontend
-  correlation headers, and classifies protected API failures for the UI
+  `VITE_API_BASE_URL`, injects the Clerk bearer token, and classifies protected
+  API failures for the UI
 - the frontend bootstraps one root TanStack Query provider and uses shared
   query-key ownership plus the standard `EnsureCurrentUserProfile` then
   `GetCurrentUser` sequence for the protected current-user flow
@@ -38,8 +29,6 @@ live in `openspec/specs/frontend-runtime/spec.md`.
   `src/api`, and app-wide Zustand stores in `src/stores`
 - the app shell reports the configured environment, API base URL, and whether
   the publishable key is present
-- shared observability user context follows frontend auth state instead of
-  relying on feature-owned telemetry wiring
 - the protected route gate distinguishes auth-loading, auth-unavailable, and
   unauthenticated redirect behavior before protected content renders
 - the auth-entry routes preserve one safe `redirectTo` target, short-circuit

@@ -9,22 +9,17 @@ Create a local `.env` from `.env.example` and fill these frontend values:
 
 ```dotenv
 VITE_APP_ENV=local
-VITE_APP_RELEASE=local-dev
 VITE_API_BASE_URL=http://localhost:8080
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_replace_me
 VITE_CLERK_SIGN_IN_URL=/sign-in
 VITE_CLERK_SIGN_UP_URL=/sign-up
 VITE_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/
 VITE_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
-VITE_OBSERVABILITY_ENABLED=false
-VITE_OBSERVABILITY_ENDPOINT=
 ```
 
 Meaning:
 
 - `VITE_APP_ENV`: frontend runtime environment label, usually `local`
-- `VITE_APP_RELEASE`: browser-visible release label used by shared frontend
-  observability metadata, usually `local-dev` for local work
 - `VITE_API_BASE_URL`: browser-visible API base URL, usually
   `http://localhost:8080` for local work
 - `VITE_CLERK_PUBLISHABLE_KEY`: Clerk frontend publishable key for the SPA
@@ -32,10 +27,6 @@ Meaning:
 - `VITE_CLERK_SIGN_UP_URL`: SPA route that hosts the sign-up flow
 - `VITE_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL`: where Clerk returns after sign-in
 - `VITE_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL`: where Clerk returns after sign-up
-- `VITE_OBSERVABILITY_ENABLED`: browser-safe toggle for the shared frontend
-  observability runtime
-- `VITE_OBSERVABILITY_ENDPOINT`: optional browser-safe endpoint used by the
-  shared frontend observability emitter
 
 ## Where To Get The Clerk Values
 
@@ -112,28 +103,10 @@ clients:
 - `VITE_API_BASE_URL` is resolved by the shared generated-client transport
 - Clerk session tokens are attached in that shared transport instead of
   feature-local request code
-- frontend-to-backend correlation headers are attached in that same shared
-  transport through `@mpa-forge/platform-frontend-observability`
 - protected server data is bootstrapped through one root TanStack Query
   provider
 - the current-user profile flow runs `EnsureCurrentUserProfile` before
   `GetCurrentUser`
-
-## Shared Frontend Observability Flow
-
-`frontend-web` now consumes the sibling
-`@mpa-forge/platform-frontend-observability` package for the browser telemetry
-baseline:
-
-- one app-owned runtime is created from browser-safe `VITE_*` values
-- auth state updates the shared observability user context
-- React Router route transitions emit shared page views
-- browser errors, unhandled promise rejections, and Web Vitals are captured
-  from app bootstrap instead of feature pages
-
-Do not add provider secrets, tokens, or static auth headers to frontend
-observability config. The shared package accepts browser-safe endpoint metadata
-only.
 
 If Clerk is configured but protected API calls still fail, check both the
 frontend runtime values above and the matching backend issuer/audience config
