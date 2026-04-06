@@ -25,6 +25,7 @@ Canonical behavior specs:
 - `openspec/specs/frontend-testing/spec.md`
 - `openspec/specs/frontend-state-management/spec.md`
 - `openspec/specs/frontend-module-boundaries/spec.md`
+- `openspec/specs/frontend-observability-integration/spec.md`
 
 ## Toolchain
 
