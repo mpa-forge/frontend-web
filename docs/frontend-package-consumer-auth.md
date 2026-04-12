@@ -5,14 +5,14 @@ that `@mpa-forge/*` packages are installed from GitHub Packages
 (`https://npm.pkg.github.com`).
 
 Secrets are not committed. Consumer auth is provided through the
-`GITHUB_PACKAGES_TOKEN` environment variable at install time.
+`GH_PACKAGES_TOKEN` environment variable at install time.
 
 ## Local Bootstrap
 
 For local installs in PowerShell:
 
 ```powershell
-$env:GITHUB_PACKAGES_TOKEN = (gh auth token).Trim()
+$env:GH_PACKAGES_TOKEN = (gh auth token).Trim()
 bun install
 ```
 
@@ -23,7 +23,7 @@ Requirements:
 
 Alternative:
 
-- export `GITHUB_PACKAGES_TOKEN` from a dedicated token instead of using
+- export `GH_PACKAGES_TOKEN` from a dedicated token instead of using
   `gh auth token`
 
 ## Future Frontend Repos Forked From This One
@@ -33,14 +33,14 @@ When a future frontend repo forks or copies this bootstrap:
 1. keep the committed `.npmrc` scoped-registry mapping
 2. keep package imports pointed at published package names such as
    `@mpa-forge/platform-contracts-client`
-3. document the `GITHUB_PACKAGES_TOKEN` bootstrap step in the new repo README
+3. document the `GH_PACKAGES_TOKEN` bootstrap step in the new repo README
 4. do not commit package tokens to the repo, `.env`, or repo-local config files
 
 ## CI Or Automation
 
 For CI or automation:
 
-- provide `GITHUB_PACKAGES_TOKEN` as a secret or environment variable
+- provide `GH_PACKAGES_TOKEN` as a secret or environment variable
 - run Bun normally; the committed `.npmrc` will use that token automatically
 
 ## Why This Exists

@@ -49,7 +49,7 @@ Run the setup commands from the repository root:
 - Bootstrap: `make bootstrap`
 
 If this repo consumes published `@mpa-forge/*` packages from GitHub Packages,
-export `GITHUB_PACKAGES_TOKEN` before install so the committed `.npmrc` can
+export `GH_PACKAGES_TOKEN` before install so the committed `.npmrc` can
 authenticate package reads.
 
 - Bootstrap auth details:
