@@ -1,3 +1,4 @@
+import type { AnyMessage } from "@bufbuild/protobuf";
 import type { Interceptor } from "@connectrpc/connect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -59,11 +60,11 @@ vi.mock("../../stores/runtime/runtimeStore", () => ({
 }));
 
 import {
-  ProtectedApiError,
   createUserServiceClient
 } from "./protectedApiClient";
 
 type InterceptorRequest = Parameters<ReturnType<Interceptor>>[0];
+type InterceptorNext = (req: InterceptorRequest) => Promise<unknown>;
 
 function composeInterceptors(interceptors: Interceptor[]) {
   const next = vi.fn(async (req: InterceptorRequest) => ({
@@ -72,13 +73,14 @@ function composeInterceptors(interceptors: Interceptor[]) {
     method: req.method,
     header: new Headers(),
     trailer: new Headers(),
-    message: {}
-  }));
+    message:
+      (req.stream ? undefined : req.message) as InterceptorRequest["message"]
+  })) as unknown as ReturnType<typeof vi.fn<InterceptorNext>>;
 
   return {
-    invoke: interceptors.reduceRight((current, interceptor) => {
-      return interceptor(current);
-    }, next),
+    invoke: interceptors.reduceRight<InterceptorNext>((current, interceptor) => {
+      return interceptor(current as never) as InterceptorNext;
+    }, next as unknown as InterceptorNext),
     next
   };
 }
@@ -97,7 +99,7 @@ function createRequest(): InterceptorRequest {
     signal: new AbortController().signal,
     header: new Headers(),
     contextValues: {} as InterceptorRequest["contextValues"],
-    message: {} as InterceptorRequest["message"]
+    message: {} as AnyMessage
   };
 }
 
@@ -153,9 +155,7 @@ describe("protectedApiClient", () => {
       .interceptors as Interceptor[];
     const { invoke } = composeInterceptors(interceptors);
 
-    await expect(invoke(createRequest())).rejects.toMatchObject<
-      Partial<ProtectedApiError>
-    >({
+    await expect(invoke(createRequest())).rejects.toMatchObject({
       kind: "auth",
       message:
         "Unable to acquire a Clerk session token for the protected API request."
