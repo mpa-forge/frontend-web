@@ -127,7 +127,7 @@ clients:
 
 `frontend-web` now consumes the shared
 `@mpa-forge/platform-frontend-observability` package from GitHub Packages.
-Provide `GITHUB_PACKAGES_TOKEN` during install so Bun can read the published
+Provide `GH_PACKAGES_TOKEN` during install so Bun can read the published
 package through the committed `.npmrc` mapping.
 
 The current integration contract is:
@@ -168,7 +168,7 @@ cross-feature reuse or clear app-wide ownership.
 3. Set `VITE_APP_RELEASE` to the current local release marker or build id
 4. Keep the local auth routes unless the frontend router changes
 5. Confirm `backend-api/.env` is already filled with matching Clerk auth values
-6. Export `GITHUB_PACKAGES_TOKEN` so Bun can install published
+6. Export `GH_PACKAGES_TOKEN` so Bun can install published
    `@mpa-forge/*` packages
 7. Run `make bootstrap`
 8. Start local services and frontend using the repo-local workflow

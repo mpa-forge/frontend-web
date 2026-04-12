@@ -1,10 +1,4 @@
-import {
-  ClerkProvider,
-  type ClerkProviderProps,
-  useAuth,
-  useClerk,
-  useUser
-} from "@clerk/clerk-react";
+import { ClerkProvider, useAuth, useClerk, useUser } from "@clerk/clerk-react";
 import type { PropsWithChildren } from "react";
 import { createContext, useContext } from "react";
 
@@ -41,6 +35,24 @@ const defaultAuthValue: FrontendAuthValue = {
 };
 
 const FrontendAuthContext = createContext<FrontendAuthValue>(defaultAuthValue);
+
+function navigateWithWindow(
+  to: string,
+  mode: "push" | "replace"
+): Promise<void> | void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const destination = new URL(to, window.location.origin).toString();
+
+  if (mode === "replace") {
+    window.location.replace(destination);
+    return;
+  }
+
+  window.location.assign(destination);
+}
 
 function hasConfiguredClerkPublishableKey(
   publishableKey: string | undefined
@@ -92,18 +104,20 @@ export function FrontendAuthProvider({ children }: PropsWithChildren) {
     );
   }
 
-  const clerkProps: ClerkProviderProps = {
-    publishableKey,
-    signInUrl: signInRoute,
-    signUpUrl: signUpRoute,
-    signInFallbackRedirectUrl:
-      envValues.VITE_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL,
-    signUpFallbackRedirectUrl:
-      envValues.VITE_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL
-  };
-
   return (
-    <ClerkProvider {...clerkProps}>
+    <ClerkProvider
+      publishableKey={publishableKey}
+      routerPush={(to) => navigateWithWindow(to, "push")}
+      routerReplace={(to) => navigateWithWindow(to, "replace")}
+      signInUrl={signInRoute}
+      signUpUrl={signUpRoute}
+      signInFallbackRedirectUrl={
+        envValues.VITE_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL
+      }
+      signUpFallbackRedirectUrl={
+        envValues.VITE_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL
+      }
+    >
       <ClerkSessionAuthProvider>{children}</ClerkSessionAuthProvider>
     </ClerkProvider>
   );
